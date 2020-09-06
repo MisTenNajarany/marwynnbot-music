@@ -14,6 +14,7 @@ from globalcommands import GlobalCMDS
 
 gcmds = GlobalCMDS()
 token_rx = re.compile(r'[MN]\w{23}.[\w-]{6}.[\w-]{27}')
+version = f"MarwynnBot Music {gcmds.version}"
 
 if os.path.exists('discord.log'):
     os.remove('discord.log')
@@ -41,16 +42,9 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 
-@tasks.loop(seconds=120)
+
 async def status():
-    activity1 = discord.Activity(name="m!h for help!", type=discord.ActivityType.listening)
-    activity2 = discord.Activity(name=f"{len(client.users)} users!", type=discord.ActivityType.watching)
-    activity3 = discord.Activity(name=f"{len(client.guilds)} servers!", type=discord.ActivityType.watching)
-    activity4 = discord.Activity(name="Under development [WIP]", type=discord.ActivityType.playing)
-    activity5 = discord.Activity(name="MS Arranges#3060 for source code info", type=discord.ActivityType.watching)
-    activity6 = discord.Activity(name=f"{len(client.commands)} commands", type=discord.ActivityType.listening)
-    activityList = [activity1, activity2, activity3, activity4, activity5, activity6]
-    activity = random.choice(activityList)
+    activity = discord.Activity(name="Invite MarwynnBot!", type=discord.ActivityType.playing)
     await client.change_presence(status=discord.Status.online, activity=activity)
 
 
@@ -60,11 +54,12 @@ async def on_ready():
     for cog in sorted(cogs):
         client.load_extension(f'cogs.{cog}')
         print(f"Cog \"{cog}\" has been loaded")
+    print("Running", version)
     hostname = socket.gethostname()
     ip = socket.gethostbyname(hostname)
     print(f'Successfully logged in as {client.user}\nIP: {ip}\nHost: {str(hostname)}\nServing '
           f'{len(client.users)} users across {len(client.guilds)} servers')
-    await status.start()
+    await status()
 
 
 @client.check
