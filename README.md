@@ -20,7 +20,7 @@ You can add the public MarwynnBot Music to your own Discord server by clicking [
 
 ## Commands
 
-![progress](https://img.shields.io/badge/coverage-100%25-orange)
+![progress](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
 Add the bot and do `m?help` for a list of all supported commands.
 
