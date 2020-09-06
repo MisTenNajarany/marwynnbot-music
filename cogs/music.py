@@ -5,6 +5,7 @@ from datetime import datetime
 import discord
 import lavalink
 from discord.ext import commands, tasks
+import globalcommands
 from globalcommands import GlobalCMDS
 
 gcmds = GlobalCMDS()
@@ -38,6 +39,26 @@ class Music(commands.Cog):
         print(f'Cog "{self.qualified_name}" has been loaded')
 
     @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        player = self.client.lavalink.player_manager.get(member.guild.id)
+        if member.bot and member.id == int(gcmds.env_check('MARWYNNBOT_ID')):
+            if player and after.channel and after.channel.id == int(player.fetch('channel')):
+                player.queue.clear()
+                await player.stop()
+                try:
+                    channel = self.info[str(member.guild.id)]['message'].channel
+                except Exception:
+                    channel = None
+                await self.del_temp_msgs(member.guild.id)
+                await self.connect_to(member.guild.id, None)
+                if not before.channel and channel:
+                    embed = discord.Embed(title="MarwynnBot is Already Connected",
+                                  description=f"I have left this voice channel because {member.mention} just joined. "
+                                  "Please have me join a different channel.",
+                                  color=discord.Color.dark_red())
+                    return await channel.send(embed=embed, delete_after=15)
+
+    @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if not reaction.message.guild or not user.voice or reaction.emoji not in reactions:
             return
@@ -62,7 +83,7 @@ class Music(commands.Cog):
                                                 description=f"{user.mention}, I have stoppped the music player and "
                                                             f"cleared the queue",
                                                 color=discord.Color.blue())
-                        stopped.set_footer(text=f"Executed by {user.display_name} " + \
+                        stopped.set_footer(text=f"Executed by {user.display_name} " +
                                                 "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now()))
                         await reaction.message.channel.send(embed=stopped, delete_after=5)
                     if reaction.emoji == "⏪":
@@ -108,7 +129,7 @@ class Music(commands.Cog):
                         pauseEmbed = discord.Embed(title=f"Player {pause}",
                                                    description=f"{user.mention}, the player has been {pause.lower()}",
                                                    color=discord.Color.blue())
-                        pauseEmbed.set_footer(text=f"Executed by {user.display_name} " + \
+                        pauseEmbed.set_footer(text=f"Executed by {user.display_name} " +
                                                    "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now()))
                         try:
                             await paused_message.edit(embed=pauseEmbed, delete_after=5)
@@ -130,7 +151,7 @@ class Music(commands.Cog):
                                                     description=f"{user.mention}, I have skipped to the next track in "
                                                                 f"queue\n\n{vid_info}",
                                                     color=discord.Color.blue())
-                            skipped.set_footer(text=f"Executed by {user.display_name} " + \
+                            skipped.set_footer(text=f"Executed by {user.display_name} " +
                                                     "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now()))
                         await reaction.message.channel.send(embed=skipped, delete_after=5)
 
@@ -278,6 +299,11 @@ class Music(commands.Cog):
             await self.del_temp_msgs(event.player.guild_id)
 
     async def connect_to(self, guild_id: int, channel_id: str):
+        if channel_id:
+            channel = self.client.get_channel(int(channel_id))
+            member_ids = [member.id for member in channel.members]
+            if int(gcmds.env_check("MARWYNNBOT_ID")) in member_ids:
+                raise globalcommands.MBConnectedError
         ws = self.client._connection._get_websocket(guild_id)
         await ws.voice_state(str(guild_id), channel_id)
 
@@ -307,7 +333,10 @@ class Music(commands.Cog):
             self.info[str(guild_id)][key] = value
 
     async def del_temp_msgs(self, guild_id: int):
-        message = self.info[str(guild_id)]['message']
+        try:
+            message = self.info[str(guild_id)]['message']
+        except KeyError:
+            return
         paused = self.info[str(guild_id)]['paused']
         paused_message = self.info[str(guild_id)]['paused_message']
         queue = self.info[str(guild_id)]['queue']
@@ -912,7 +941,7 @@ class Music(commands.Cog):
                 except discord.NotFound:
                     return await ctx.channel.send(embed=no_panel, delete_after=5)
                 choice = await self.client.wait_for("reaction_add", check=reaction_check,
-                                                                timeout=30)
+                                                    timeout=30)
             except asyncio.TimeoutError:
                 timeout = discord.Embed(title="Save Request Timed Out",
                                         description=f"{ctx.author.mention}, your save request timed out. Please try again",
@@ -1010,7 +1039,7 @@ class Music(commands.Cog):
             while True:
                 try:
                     name_reply = await self.client.wait_for("message", check=from_user,
-                                                                        timeout=30)
+                                                            timeout=30)
                 except asyncio.TimeoutError:
                     timeout = discord.Embed(title="Save Request Timed Out",
                                             description=f"{ctx.author.mention}, you did not specify a name within the "
@@ -1244,7 +1273,7 @@ class Music(commands.Cog):
                 except discord.NotFound:
                     return await ctx.channel.send(embed=no_panel, delete_after=5)
                 reacted = await self.client.wait_for("reaction_add", check=reaction_check,
-                                                                 timeout=30)
+                                                     timeout=30)
             except asyncio.TimeoutError:
                 timeout = discord.Embed(title="Remove Request Timed Out",
                                         description=f"{ctx.author.mention}, you did not react within the time limit",
