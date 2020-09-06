@@ -1,0 +1,12 @@
+.vscode
+cogs/__pycache__
+venv
+logs
+__pycache__
+/db
+.env
+*.pyc
+*.json
+*.log
+*.jar
+*.yml
