@@ -3,7 +3,7 @@
 ![GitHub stars](https://img.shields.io/github/stars/marwynnsomridhivej/marwynnbot?label=Stars&style=social)
 ![GitHub forks](https://img.shields.io/github/forks/marwynnsomridhivej/marwynnbot?label=Forks&style=social)
 
-# MarwynnBot Music <img align="right" src="/vibingtoad.jpg" height="100" width="100"> ![Version](https://img.shields.io/badge/Version-v1.0.0-brightgreen)
+# MarwynnBot Music <img align="right" src="/vibingtoad.jpg" height="200" width="200" border-radius="50%"> ![Version](https://img.shields.io/badge/Version-v1.0.0-brightgreen)
 
 I am a port of [MarwynnBot's](https://github.com/marwynnsomridhivej/marwynnbot) music functionality.
 
