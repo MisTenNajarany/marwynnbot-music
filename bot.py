@@ -9,6 +9,7 @@ import re
 import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+import globalcommands
 from globalcommands import GlobalCMDS
 
 
@@ -130,6 +131,12 @@ async def on_command_error(ctx, error):
                                              f"does not exist\n\nDo `{gcmds.prefix(ctx)}help` for help",
                                  color=discord.Color.dark_red())
         await ctx.channel.send(embed=notFound, delete_after=10)
+    elif isinstance(error, globalcommands.MBConnectedError):
+            embed = discord.Embed(title="MarwynnBot is Already Connected",
+                                  description=f"{ctx.author.mention}, MarwynnBot is already connected to this voice "
+                                  "channel. Please disconnect MarwynnBot or have me join a different voice channel",
+                                  color=discord.Color.dark_red())
+            return await ctx.channel.send(embed=embed, delete_after=15)
     elif isinstance(error, commands.CheckFailure):
         pass
     else:
