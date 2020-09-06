@@ -9,12 +9,14 @@ env_write = ["TOKEN=YOUR_BOT_TOKEN",
              "OWNER_ID=YOUR_ID_HERE",
              "LAVALINK_IP=IP_ADDR",
              "LAVALINK_PORT=PORT",
-             "LAVALINK_PASSWORD=DEFAULT_STRING"]
+             "LAVALINK_PASSWORD=DEFAULT_STRING",
+             "MARWYNNBOT_ID=MB_CLIENT_ID"]
 default_env = ["YOUR_BOT_TOKEN",
                "YOUR_ID_HERE",
                "IP_ADDR",
                "PORT",
-               "DEFAULT_STRING"]
+               "DEFAULT_STRING",
+               "MB_CLIENT_ID"]
 
 
 class GlobalCMDS:
