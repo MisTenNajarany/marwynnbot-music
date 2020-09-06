@@ -141,10 +141,30 @@ async def on_guild_join(guild):
     gcmds.json_load('db/prefixes.json', {})
     with open('db/prefixes.json', 'r') as f:
         prefixes = json.load(f)
-    prefixes[str(guild.id)] = 'm!'
+    prefixes[str(guild.id)] = 'm?'
 
     with open('db/prefixes.json', 'w') as f:
         json.dump(prefixes, f, indent=4)
+    
+    mb_id = gcmds.env_check('MARWYNNBOT_ID')
+    mb = client.get_user(int(mb_id))
+    member_id_list = [member.id for member in guild.members]
+    if not int(mb_id) in member_id_list:
+        embed = discord.Embed(title="Invite MarwynnBot!",
+                                  description=f"Thank you for using {client.user.mention}! I'd like to invite you to "
+                                  f"use {mb.mention} as well. MarwynnBot is the main bot which this bot is ported from. "
+                                  "MarwynnBot has a ton of features that aren't included in MarwynnBot Music, so please"
+                                  " consider checking it out!\n\n**Invite:** https://discord.com/oauth2/authorize?"
+                                  "client_id=623317451811061763&scope=bot&permissions=8",
+                                  color=discord.Color.blue(),
+                                  url="https://discord.com/oauth2/authorize?client_id=623317451811061763&"
+                                  "scope=bot&permissions=8")
+        for channel in guild.channels:
+            try:
+                await channel.send(embed=embed)
+                break
+            except Exception:
+                continue
 
 
 @client.event
