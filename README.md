@@ -1,12 +1,9 @@
 ![License](https://img.shields.io/badge/license-GPLv3.0-brightgreen)
-
 ![Clone Size](https://img.shields.io/github/repo-size/marwynnsomridhivej/marwynnbot?color=red&label=Clone%20Size)
-
 ![GitHub stars](https://img.shields.io/github/stars/marwynnsomridhivej/marwynnbot?label=Stars&style=social)
-
 ![GitHub forks](https://img.shields.io/github/forks/marwynnsomridhivej/marwynnbot?label=Forks&style=social)
 
-# MarwynnBot <img align="right" src="/vibingtoad.jpg" height="100" width="100">
+# MarwynnBot Music <img align="right" src="/vibingtoad.jpg" height="100" width="100">
 
 I am a port of [MarwynnBot's](https://github.com/marwynnsomridhivej/marwynnbot) music functionality.
 
