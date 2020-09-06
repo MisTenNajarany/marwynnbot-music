@@ -3,13 +3,11 @@
 ![GitHub stars](https://img.shields.io/github/stars/marwynnsomridhivej/marwynnbot?label=Stars&style=social)
 ![GitHub forks](https://img.shields.io/github/forks/marwynnsomridhivej/marwynnbot?label=Forks&style=social)
 
-# MarwynnBot Music <img align="right" src="/vibingtoad.jpg" height="100" width="100">
+# MarwynnBot Music <img align="right" src="/vibingtoad.jpg" height="100" width="100"> ![Version](https://img.shields.io/badge/Version-v1.0.0-brightgreen)
 
 I am a port of [MarwynnBot's](https://github.com/marwynnsomridhivej/marwynnbot) music functionality.
 
 ## Add Me To Your Server
-
-![uptime](https://img.shields.io/badge/uptime-90.0%25-brightgreen)
 
 You can add the public MarwynnBot Music to your own Discord server by clicking [here](https://discord.com/oauth2/authorize?client_id=751966223813705809&scope=bot&permissions=66334016)
 
@@ -19,8 +17,6 @@ You can add the public MarwynnBot Music to your own Discord server by clicking [
 * Global prefixes are mentioning the bot or `mm` *(case insensitive)*
 
 ## Commands
-
-![progress](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
 Add the bot and do `m?help` for a list of all supported commands.
 
