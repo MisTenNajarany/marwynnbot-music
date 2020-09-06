@@ -47,6 +47,29 @@ async def status():
     await client.change_presence(status=discord.Status.online, activity=activity)
 
 
+async def check_marwynnbot():
+    mb_id = gcmds.env_check("MARWYNNBOT_ID")
+    mb = client.get_user(int(mb_id))
+    member_id_list = [(guild, [member.id for member in guild.members]) for guild in client.guilds]
+    for guild, id_list in member_id_list:
+        if not int(mb_id) in id_list:
+            embed = discord.Embed(title="Invite MarwynnBot!",
+                                  description=f"Thank you for using {client.user.mention}! I'd like to invite you to "
+                                  f"use {mb.mention} as well. MarwynnBot is the main bot which this bot is ported from. "
+                                  "MarwynnBot has a ton of features that aren't included in MarwynnBot Music, so please"
+                                  " consider checking it out!\n\n**Invite:** https://discord.com/oauth2/authorize?"
+                                  "client_id=623317451811061763&scope=bot&permissions=8",
+                                  color=discord.Color.blue(),
+                                  url="https://discord.com/oauth2/authorize?client_id=623317451811061763&"
+                                  "scope=bot&permissions=8")
+            for channel in guild.channels:
+                try:
+                    await channel.send(embed=embed)
+                    break
+                except Exception:
+                    continue
+
+
 @client.event
 async def on_ready():
     cogs = [filename[:-3] for filename in os.listdir('./cogs') if filename.endswith(".py")]
@@ -59,6 +82,7 @@ async def on_ready():
     print(f'Successfully logged in as {client.user}\nIP: {ip}\nHost: {str(hostname)}\nServing '
           f'{len(client.users)} users across {len(client.guilds)} servers')
     await status()
+    await check_marwynnbot()
 
 
 @client.check
