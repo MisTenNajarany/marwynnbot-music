@@ -11,7 +11,7 @@ I am a port of [MarwynnBot's](https://github.com/marwynnsomridhivej/marwynnbot) 
 
 ![uptime](https://img.shields.io/badge/uptime-90.0%25-brightgreen)
 
-You can add the public MarwynnBot to your own Discord server by clicking [here](https://discord.com/oauth2/authorize?client_id=751966223813705809&scope=bot&permissions=66334016)
+You can add the public MarwynnBot Music to your own Discord server by clicking [here](https://discord.com/oauth2/authorize?client_id=751966223813705809&scope=bot&permissions=66334016)
 
 ## Prefix
 
@@ -25,7 +25,7 @@ You can add the public MarwynnBot to your own Discord server by clicking [here](
 Add the bot and do `m?help` for a list of all supported commands.
 
 Commands are separated into categories that determine a command's function. I am currently working on making a website
-that will display all of MarwynnBot's commands. Please stay tuned for its release
+that will display all of MarwynnBot Music's commands. Please stay tuned for its release
 
 For a guide on all commands and their usages, I will be updating [MarwynnBot's Website](http://www.marwynnbot.tk)
 
