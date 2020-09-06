@@ -19,6 +19,10 @@ default_env = ["YOUR_BOT_TOKEN",
                "MB_CLIENT_ID"]
 
 
+class MBConnectedError(commands.CommandError):
+    pass
+
+
 class GlobalCMDS:
 
     def __init__(self):
