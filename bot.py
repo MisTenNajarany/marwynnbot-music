@@ -42,7 +42,6 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 
-
 async def status():
     activity = discord.Activity(name="Invite MarwynnBot!", type=discord.ActivityType.playing)
     await client.change_presence(status=discord.Status.online, activity=activity)
@@ -107,32 +106,15 @@ async def on_command_error(ctx, error):
                                              f"does not exist\n\nDo `{gcmds.prefix(ctx)}help` for help",
                                  color=discord.Color.dark_red())
         await ctx.channel.send(embed=notFound, delete_after=10)
-    elif isinstance(error, commands.CommandOnCooldown):
-        cooldown_time_truncated = truncate(error.retry_after, 3)
-        if cooldown_time_truncated < 1:
-            spell = "milliseconds"
-            cooldown_time_truncated *= 1000
-        else:
-            spell = "seconds"
-        cooldown = discord.Embed(title="Command on Cooldown",
-                                 description=f"{ctx.author.mention}, this command is still on cooldown for {cooldown_time_truncated} {spell}",
-                                 color=discord.Color.dark_red())
-        await ctx.channel.send(embed=cooldown, delete_after=math.ceil(error.retry_after))
     elif isinstance(error, commands.CheckFailure):
         pass
     else:
         raise error
 
 
-def truncate(number: float, decimal_places: int):
-    stepper = 10.0 ** decimal_places
-    return math.trunc(stepper * number) / stepper
-
-
 @client.event
 async def on_guild_join(guild):
-    if not os.path.exists('db/prefixes.json'):
-        gcmds.json_load('db/prefixes.json', {})
+    gcmds.json_load('db/prefixes.json', {})
     with open('db/prefixes.json', 'r') as f:
         prefixes = json.load(f)
     prefixes[str(guild.id)] = 'm!'
