@@ -31,20 +31,15 @@ class Utility(commands.Cog):
     @commands.command(aliases=['p', 'checkprefix', 'prefixes'])
     async def prefix(self, ctx):
         await gcmds.invkDelete(ctx)
-        with open('db/prefixes.json', 'r') as f:
-            prefixes = json.load(f)
-
-        serverPrefix = prefixes[str(ctx.guild.id)]
         prefixEmbed = discord.Embed(title='Prefixes',
                                     color=discord.Color.blue())
         prefixEmbed.add_field(name="Current Server Prefix",
-                              value=f"The current server prefix is: `{serverPrefix}`",
+                              value=f"The current server prefix is: `{gcmds.prefix(ctx)}`",
                               inline=False)
         prefixEmbed.add_field(name="Global Prefixes",
                               value=f"{self.client.user.mention} or `mb ` - *ignorecase*",
                               inline=False)
         await ctx.channel.send(embed=prefixEmbed)
-        gcmds.incrCounter(ctx, 'prefix')
 
     @commands.command(aliases=['sp', 'setprefix'])
     @commands.has_permissions(manage_guild=True)
@@ -69,7 +64,6 @@ class Utility(commands.Cog):
                                         description=f"Server prefix has been reset to `m!`",
                                         color=discord.Color.blue())
         await ctx.channel.send(embed=prefixEmbed)
-        gcmds.incrCounter(ctx, 'setPrefix')
 
 
 def setup(client):

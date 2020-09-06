@@ -64,7 +64,7 @@ class Help(commands.Cog):
     @commands.group(aliases=['h'])
     async def help(self, ctx):
         await gcmds.invkDelete(ctx)
-        gcmds.incrCounter(ctx, 'help')
+        
         if ctx.invoked_subcommand is None:
             timestamp = f"Executed by {ctx.author.display_name} " + "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now())
             helpEmbed = discord.Embed(title="MarwynnBot Music Help Menu",
