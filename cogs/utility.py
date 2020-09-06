@@ -11,11 +11,6 @@ class Utility(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.messages = {}
-        self.update_server_stats.start()
-
-    def cog_unload(self):
-        self.update_server_stats.cancel()
 
     @commands.Cog.listener()
     async def on_ready(self):
