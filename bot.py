@@ -71,12 +71,8 @@ async def check_marwynnbot():
                     continue
 
 
-@client.event
-async def on_ready():
-    cogs = [filename[:-3] for filename in os.listdir('./cogs') if filename.endswith(".py")]
-    for cog in sorted(cogs):
-        client.load_extension(f'cogs.{cog}')
-        print(f"Cog \"{cog}\" has been loaded")
+async def client_ready():
+    await client.wait_until_ready()
     print("Running", version)
     hostname = socket.gethostname()
     ip = socket.gethostbyname(hostname)
@@ -185,8 +181,15 @@ async def on_guild_remove(guild):
         json.dump(prefixes, f, indent=4)
 
 
+cogs = [filename[:-3] for filename in os.listdir('./cogs') if filename.endswith(".py")]
+for cog in sorted(cogs):
+    client.load_extension(f'cogs.{cog}')
+    print(f"Cog \"{cog}\" has been loaded")
+
+
 if not gcmds.init_env():
     sys.exit("Please put your bot's token inside the created .env file")
 load_dotenv()
+client.loop.create_task(client_ready())
 token = os.getenv('TOKEN')
 client.run(token)
