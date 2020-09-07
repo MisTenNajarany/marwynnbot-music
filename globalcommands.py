@@ -26,7 +26,7 @@ class MBConnectedError(commands.CommandError):
 class GlobalCMDS:
 
     def __init__(self):
-        self.version = "v1.0.0"
+        self.version = "v1.0.1"
 
     def init_env(self):
         if not os.path.exists('.env'):
@@ -44,22 +44,16 @@ class GlobalCMDS:
         if ctx.guild and ctx.guild.me.guild_permissions.manage_messages:
             await ctx.message.delete()
 
-    def isGuild(self, ctx):
-        if ctx.guild:
-            return True
-        else:
-            return False
-
     def json_load(self, filenamepath: str, init: dict):
         if not os.path.exists(filenamepath):
             with open(filenamepath, 'w') as f:
                 json.dump(init, f, indent=4)
 
     def prefix(self, ctx):
-        if not self.isGuild(ctx):
+        if not ctx.guild:
             return "m?"
 
         with open('db/prefixes.json', 'r') as f:
             prefixes = json.load(f)
 
-        return prefixes[str(ctx.guild.id)]
+        return prefixes.get(str(ctx.guild.id), 'm?')
