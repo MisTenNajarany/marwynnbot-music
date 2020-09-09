@@ -33,19 +33,14 @@ async def get_prefix(client, message):
                 'm?', 'M?')
             return commands.when_mentioned_or(*extras)(client, message)
 
-
-client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None, shard_count=1)
+activity = discord.Activity(name="Invite MarwynnBot!", type=discord.ActivityType.playing)
+client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None, shard_count=1, status=discord.Status.online, activity=activity)
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
-
-
-async def status():
-    activity = discord.Activity(name="Invite MarwynnBot!", type=discord.ActivityType.playing)
-    await client.change_presence(status=discord.Status.online, activity=activity)
 
 
 async def check_marwynnbot():
@@ -78,7 +73,6 @@ async def client_ready():
     ip = socket.gethostbyname(hostname)
     print(f'Successfully logged in as {client.user}\nIP: {ip}\nHost: {str(hostname)}\nServing '
           f'{len(client.users)} users across {len(client.guilds)} servers')
-    await status()
     await check_marwynnbot()
 
 
