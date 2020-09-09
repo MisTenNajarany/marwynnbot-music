@@ -52,9 +52,9 @@ class Music(commands.Cog):
                 await self.connect_to(member.guild.id, None)
                 if not before.channel and channel:
                     embed = discord.Embed(title="MarwynnBot is Already Connected",
-                                  description=f"I have left this voice channel because {member.mention} just joined. "
-                                  "Please have me join a different channel.",
-                                  color=discord.Color.dark_red())
+                                          description=f"I have left this voice channel because {member.mention} just joined. "
+                                          "Please have me join a different channel.",
+                                          color=discord.Color.dark_red())
                     return await channel.send(embed=embed, delete_after=15)
 
     @commands.Cog.listener()
@@ -173,7 +173,6 @@ class Music(commands.Cog):
     def save_playlist(self, ctx, key: str, value: list):
         with open('db/playlists.json', 'r') as f:
             file = json.load(f)
-            f.close()
 
         try:
             file[str(ctx.author.id)][str(key)]['urls'] = value
@@ -187,7 +186,6 @@ class Music(commands.Cog):
     def append_playlist(self, ctx, key: str, value):
         with open('db/playlists.json', 'r') as f:
             file = json.load(f)
-            f.close()
 
         current_urls = file[str(ctx.author.id)][str(key)]['urls']
         if isinstance(value, str):
@@ -212,7 +210,7 @@ class Music(commands.Cog):
                 info = (name, urls)
             else:
                 info = [(item, file[str(ctx.author.id)][item]['urls']) for item in file[str(ctx.author.id)].keys()]
-            f.close()
+
         return info
 
     def check_playlist(self, ctx, key: str):
