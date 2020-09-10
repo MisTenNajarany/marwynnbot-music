@@ -57,49 +57,47 @@ class Help(commands.Cog):
 
         await ctx.channel.send(embed=embed, delete_after=delete_after)
 
-    @commands.group(aliases=['h'])
+    @commands.group(invoke_without_command=True, aliases=['h'])
     async def help(self, ctx):
+        timestamp = f"Executed by {ctx.author.display_name} " + "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now())
+        helpEmbed = discord.Embed(title="MarwynnBot Music Help Menu",
+                                    color=discord.Color.blue(),
+                                    url="https://discord.gg/fYBTdUp",
+                                    description="These are all the commands I currently support! Type"
+                                                f"\n```{gcmds.prefix(ctx)}help [command]```\n to get help on "
+                                                f"that specific command")
+        helpEmbed.set_thumbnail(
+            url="https://www.jing.fm/clipimg/full/71-716621_transparent-clip-art-open-book-frame-line-art.png")
+        helpEmbed.set_author(name="MarwynnBot Music",
+                                icon_url=ctx.me.avatar_url)
+        helpEmbed.set_footer(text=timestamp,
+                                icon_url=ctx.author.avatar_url)
 
-        if ctx.invoked_subcommand is None:
-            timestamp = f"Executed by {ctx.author.display_name} " + "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now())
-            helpEmbed = discord.Embed(title="MarwynnBot Music Help Menu",
-                                      color=discord.Color.blue(),
-                                      url="https://discord.gg/fYBTdUp",
-                                      description="These are all the commands I currently support! Type"
-                                                  f"\n```{gcmds.prefix(ctx)}help [command]```\n to get help on "
-                                                  f"that specific command")
-            helpEmbed.set_thumbnail(
-                url="https://www.jing.fm/clipimg/full/71-716621_transparent-clip-art-open-book-frame-line-art.png")
-            helpEmbed.set_author(name="MarwynnBot Music",
-                                 icon_url=ctx.me.avatar_url)
-            helpEmbed.set_footer(text=timestamp,
-                                 icon_url=ctx.author.avatar_url)
+        cogNames = [i for i in self.client.cogs]
+        cogs = [self.client.get_cog(j) for j in cogNames]
+        strings = {}
+        for name in cogNames:
+            cog_commands = self.client.get_cog(name).get_commands()
+            strings.update({name.lower(): [command.name.lower() for command in cog_commands]})
 
-            cogNames = [i for i in self.client.cogs]
-            cogs = [self.client.get_cog(j) for j in cogNames]
-            strings = {}
-            for name in cogNames:
-                cog_commands = self.client.get_cog(name).get_commands()
-                strings.update({name.lower(): [command.name.lower() for command in cog_commands]})
+        helpCmds = f"`{'` `'.join(strings['help'])}`"
+        musicCmds = f"`{'` `'.join(strings['music'])}`"
+        ownerCmds = f"`{'` `'.join(strings['owner'])}`"
+        utilityCmds = f"`{'` `'.join(strings['utility'])}`"
 
-            helpCmds = f"`{'` `'.join(strings['help'])}`"
-            musicCmds = f"`{'` `'.join(strings['music'])}`"
-            ownerCmds = f"`{'` `'.join(strings['owner'])}`"
-            utilityCmds = f"`{'` `'.join(strings['utility'])}`"
-
-            helpEmbed.add_field(name="Help",
-                                value=helpCmds,
-                                inline=False)
-            helpEmbed.add_field(name="Music",
-                                value=musicCmds,
-                                inline=False)
-            helpEmbed.add_field(name="Utility",
-                                value=utilityCmds,
-                                inline=False)
-            helpEmbed.add_field(name="Owner Only",
-                                value=ownerCmds,
-                                inline=False)
-            await ctx.send(embed=helpEmbed)
+        helpEmbed.add_field(name="Help",
+                            value=helpCmds,
+                            inline=False)
+        helpEmbed.add_field(name="Music",
+                            value=musicCmds,
+                            inline=False)
+        helpEmbed.add_field(name="Utility",
+                            value=utilityCmds,
+                            inline=False)
+        helpEmbed.add_field(name="Owner Only",
+                            value=ownerCmds,
+                            inline=False)
+        await ctx.send(embed=helpEmbed)
 
     # =================================================
     # Help

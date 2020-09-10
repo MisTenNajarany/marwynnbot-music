@@ -14,7 +14,7 @@ class Utility(commands.Cog):
 
     @commands.command()
     async def invite(self, ctx):
-                embed = discord.Embed(title="MarwynnBot Music's Invite Link",
+        embed = discord.Embed(title="MarwynnBot Music's Invite Link",
                               description=f"{ctx.author.mention}, thank you for using MarwynnBot Music! Here is my"
                               " invite link that you can share:\n\n https://discord.com/oauth2/authorize?client_id=7519"
                               "66223813705809&scope=bot&permissions=66334016",
@@ -25,7 +25,7 @@ class Utility(commands.Cog):
 
     @commands.command(aliases=['p', 'checkprefix', 'prefixes'])
     async def prefix(self, ctx):
-                prefixEmbed = discord.Embed(title='Prefixes',
+        prefixEmbed = discord.Embed(title='Prefixes',
                                     color=discord.Color.blue())
         prefixEmbed.add_field(name="Current Server Prefix",
                               value=f"The current server prefix is: `{gcmds.prefix(ctx)}`",
@@ -38,7 +38,7 @@ class Utility(commands.Cog):
     @commands.command(aliases=['sp', 'setprefix'])
     @commands.has_permissions(manage_guild=True)
     async def setPrefix(self, ctx, prefix):
-                with open('db/prefixes.json', 'r') as f:
+        with open('db/prefixes.json', 'r') as f:
             prefixes = json.load(f)
             if prefix != 'reset':
                 prefixes[str(ctx.guild.id)] = prefix
