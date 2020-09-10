@@ -343,7 +343,7 @@ class Music(commands.Cog):
         if message:
             try:
                 await message.delete()
-            except (discord.NotFound, AttributeError, KeyError):
+            except Exception:
                 pass
             await self.set_value(guild_id, 'message', None)
         if paused:
@@ -351,7 +351,7 @@ class Music(commands.Cog):
         if paused_message:
             try:
                 await paused_message.delete()
-            except (discord.NotFound, AttributeError, KeyError):
+            except Exception:
                 pass
             await self.set_value(guild_id, 'paused_message', None)
         if queue:
@@ -359,19 +359,19 @@ class Music(commands.Cog):
         if rewind_message:
             try:
                 await rewind_message.delete()
-            except (discord.NotFound, AttributeError, KeyError):
+            except Exception:
                 pass
             await self.set_value(guild_id, 'rewind_message', None)
         if queue_message:
             try:
                 await queue_message.delete()
-            except (discord.NotFound, AttributeError, KeyError):
+            except Exception:
                 pass
             await self.set_value(guild_id, 'queue_message', None)
         if volume_message:
             try:
                 await volume_message.delete()
-            except (discord.NotFound, AttributeError, KeyError):
+            except Exception:
                 pass
             await self.set_value(guild_id, 'volume_message', None)
 
@@ -991,7 +991,6 @@ class Music(commands.Cog):
             self.save_playlist(ctx, plist_name, urls)
             if name == "null":
                 self.remove_playlist(ctx, 'null')
-            await reply.delete()
         else:
             try:
                 getName = discord.Embed(title="Specify the Playlist Index",
@@ -1012,7 +1011,6 @@ class Music(commands.Cog):
                     return await panel.edit(embed=timeout, delete_after=10)
                 else:
                     name = reply.content
-                    await reply.delete()
                     if not self.check_playlist(ctx, name):
                         continue
                     break
@@ -1044,7 +1042,6 @@ class Music(commands.Cog):
 
             else:
                 plist_name = name
-            await name_reply.delete()
 
             info = self.get_playlist(ctx, plist_name)
 
@@ -1108,17 +1105,14 @@ class Music(commands.Cog):
                     return await ctx.channel.send(embed=timeout, delete_after=10)
             else:
                 if message.content == "cancel":
-                    await message.delete()
                     try:
                         return await panel.edit(embed=cancelled, delete_after=10)
                     except discord.NotFound:
                         return await ctx.channel.send(embed=cancelled, delete_after=10)
                 elif not self.check_playlist(ctx, message.content):
-                    await message.delete()
                     continue
                 else:
                     name = message.content
-                    await message.delete()
                     break
 
         try:
@@ -1137,7 +1131,6 @@ class Music(commands.Cog):
                 return await ctx.channel.send(embed=timeout, delete_after=10)
         else:
             yt_link = message_link.content
-            await message_link.delete()
 
         if not url_rx.match(yt_link) or "youtube.com" not in yt_link:
             try:
@@ -1245,7 +1238,6 @@ class Music(commands.Cog):
                         name = choice.content
                         valid = True
                         break
-                await choice.delete()
                 if valid:
                     break
                 continue
