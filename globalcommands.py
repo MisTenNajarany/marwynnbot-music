@@ -26,7 +26,7 @@ class MBConnectedError(commands.CommandError):
 class GlobalCMDS:
 
     def __init__(self):
-        self.version = "v1.1.4"
+        self.version = "v1.2.0"
 
     def init_env(self):
         if not os.path.exists('.env'):
