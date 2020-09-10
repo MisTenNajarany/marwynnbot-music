@@ -16,8 +16,7 @@ class Owner(commands.Cog):
     @commands.command(aliases=['l', 'ld'])
     @commands.is_owner()
     async def load(self, ctx, extension):
-        await gcmds.invkDelete(ctx)
-        try:
+                try:
             self.client.load_extension(f'cogs.{extension}')
         except CommandInvokeError:
             title = "Cog Load Fail"
@@ -36,8 +35,7 @@ class Owner(commands.Cog):
     @commands.command(aliases=['ul', 'uld'])
     @commands.is_owner()
     async def unload(self, ctx, extension):
-        await gcmds.invkDelete(ctx)
-        try:
+                try:
             self.client.unload_extension(f'cogs.{extension}')
         except CommandInvokeError:
             title = "Cog Unoad Fail"
@@ -56,8 +54,7 @@ class Owner(commands.Cog):
     @commands.command(aliases=['r', 'rl'])
     @commands.is_owner()
     async def reload(self, ctx, *, extension=None):
-        await gcmds.invkDelete(ctx)
-        if extension is None:
+                if extension is None:
             print("==========================")
             for filenameReload in os.listdir('./cogs'):
                 if filenameReload.endswith('.py'):
@@ -81,8 +78,7 @@ class Owner(commands.Cog):
     @commands.command(aliases=['taskkill'])
     @commands.is_owner()
     async def shutdown(self, ctx):
-        await gcmds.invkDelete(ctx)
-        shutdownEmbed = discord.Embed(title="Bot Shutdown Successful",
+                shutdownEmbed = discord.Embed(title="Bot Shutdown Successful",
                                       description="Bot is logging out",
                                       color=discord.Color.blue())
         await ctx.channel.send(embed=shutdownEmbed)

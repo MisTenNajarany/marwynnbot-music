@@ -26,7 +26,7 @@ class MBConnectedError(commands.CommandError):
 class GlobalCMDS:
 
     def __init__(self):
-        self.version = "v1.1.3"
+        self.version = "v1.1.4"
 
     def init_env(self):
         if not os.path.exists('.env'):
@@ -39,10 +39,6 @@ class GlobalCMDS:
         if not self.init_env() or os.getenv(key) in default_env:
             return False
         return os.getenv(key)
-
-    async def invkDelete(self, ctx):
-        if ctx.guild and ctx.guild.me.guild_permissions.manage_messages:
-            await ctx.message.delete()
 
     def json_load(self, filenamepath: str, init: dict):
         if not os.path.exists(filenamepath):

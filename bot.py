@@ -34,7 +34,8 @@ async def get_prefix(client, message):
             return commands.when_mentioned_or(*extras)(client, message)
 
 activity = discord.Activity(name="Invite MarwynnBot!", type=discord.ActivityType.playing)
-client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None, shard_count=1, status=discord.Status.online, activity=activity)
+client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None,
+                                 shard_count=1, status=discord.Status.online, activity=activity)
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -115,18 +116,17 @@ async def on_command_error(ctx, error):
                                   color=discord.Color.dark_red())
         await ctx.channel.send(embed=not_owner, delete_after=10)
     elif isinstance(error, commands.CommandNotFound):
-        await gcmds.invkDelete(ctx)
         notFound = discord.Embed(title="Command Not Found",
                                  description=f"{ctx.author.mention}, `{ctx.message.content}` "
                                              f"does not exist\n\nDo `{gcmds.prefix(ctx)}help` for help",
                                  color=discord.Color.dark_red())
         await ctx.channel.send(embed=notFound, delete_after=10)
     elif isinstance(error, globalcommands.MBConnectedError):
-            embed = discord.Embed(title="MarwynnBot is Already Connected",
-                                  description=f"{ctx.author.mention}, MarwynnBot is already connected to this voice "
-                                  "channel. Please disconnect MarwynnBot or have me join a different voice channel",
-                                  color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=embed, delete_after=15)
+        embed = discord.Embed(title="MarwynnBot is Already Connected",
+                              description=f"{ctx.author.mention}, MarwynnBot is already connected to this voice "
+                              "channel. Please disconnect MarwynnBot or have me join a different voice channel",
+                              color=discord.Color.dark_red())
+        return await ctx.channel.send(embed=embed, delete_after=15)
     elif isinstance(error, commands.CheckFailure):
         pass
     else:
@@ -142,20 +142,20 @@ async def on_guild_join(guild):
 
     with open('db/prefixes.json', 'w') as f:
         json.dump(prefixes, f, indent=4)
-    
+
     mb_id = gcmds.env_check('MARWYNNBOT_ID')
     mb = client.get_user(int(mb_id))
     member_id_list = [member.id for member in guild.members]
     if not int(mb_id) in member_id_list:
         embed = discord.Embed(title="Invite MarwynnBot!",
-                                  description=f"Thank you for using {client.user.mention}! I'd like to invite you to "
-                                  f"use {mb.mention} as well. MarwynnBot is the main bot which this bot is ported from. "
-                                  "MarwynnBot has a ton of features that aren't included in MarwynnBot Music, so please"
-                                  " consider checking it out!\n\n**Invite:** https://discord.com/oauth2/authorize?"
-                                  "client_id=623317451811061763&scope=bot&permissions=8",
-                                  color=discord.Color.blue(),
-                                  url="https://discord.com/oauth2/authorize?client_id=623317451811061763&"
-                                  "scope=bot&permissions=8")
+                              description=f"Thank you for using {client.user.mention}! I'd like to invite you to "
+                              f"use {mb.mention} as well. MarwynnBot is the main bot which this bot is ported from. "
+                              "MarwynnBot has a ton of features that aren't included in MarwynnBot Music, so please"
+                              " consider checking it out!\n\n**Invite:** https://discord.com/oauth2/authorize?"
+                              "client_id=623317451811061763&scope=bot&permissions=8",
+                              color=discord.Color.blue(),
+                              url="https://discord.com/oauth2/authorize?client_id=623317451811061763&"
+                              "scope=bot&permissions=8")
         for channel in guild.channels:
             try:
                 await channel.send(embed=embed)

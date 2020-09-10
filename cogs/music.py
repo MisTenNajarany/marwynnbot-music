@@ -377,7 +377,6 @@ class Music(commands.Cog):
 
     @commands.command()
     async def join(self, ctx):
-        await gcmds.invkDelete(ctx)
         player = self.client.lavalink.player_manager.get(ctx.guild.id)
         if not player:
             player = self.client.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
@@ -422,7 +421,6 @@ class Music(commands.Cog):
 
     @commands.command()
     async def play(self, ctx, *, query: str = None):
-        await gcmds.invkDelete(ctx)
         if not await self.ensure_voice(ctx):
             return
 
@@ -513,7 +511,6 @@ class Music(commands.Cog):
 
     @commands.command()
     async def queue(self, ctx, *, query: str = None):
-        await gcmds.invkDelete(ctx)
         player = self.client.lavalink.player_manager.get(ctx.guild.id)
 
         if not player:
@@ -642,8 +639,7 @@ class Music(commands.Cog):
 
     @commands.command(aliases=['clearqueue', 'qc'])
     async def queueclear(self, ctx):
-        await gcmds.invkDelete(ctx)
-
+        
         if ctx.author != ctx.guild.owner:
             return await self.not_owner(ctx)
 
@@ -680,8 +676,7 @@ class Music(commands.Cog):
 
     @commands.command()
     async def stop(self, ctx):
-        await gcmds.invkDelete(ctx)
-
+        
         if ctx.author != ctx.guild.owner:
             return await self.not_owner(ctx)
 
@@ -720,7 +715,6 @@ class Music(commands.Cog):
 
     @commands.command()
     async def leave(self, ctx):
-        await gcmds.invkDelete(ctx)
         player = self.client.lavalink.player_manager.get(ctx.guild.id)
 
         if not player:
@@ -752,7 +746,6 @@ class Music(commands.Cog):
 
     @commands.command()
     async def volume(self, ctx, amount: int = None):
-        await gcmds.invkDelete(ctx)
         if not await self.ensure_voice(ctx):
             return
         player = self.client.lavalink.player_manager.get(ctx.guild.id)
@@ -790,7 +783,6 @@ class Music(commands.Cog):
 
     @commands.group(aliases=['playlists'])
     async def playlist(self, ctx):
-        await gcmds.invkDelete(ctx)
         self.init_playlist(ctx)
 
         name = self.get_playlist(ctx, None)[0][0]
