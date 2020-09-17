@@ -226,7 +226,7 @@ class Help(commands.Cog):
         syntaxMessage = f"`{gcmds.prefix(ctx)}prefix`"
         exampleUsage = f"`{gcmds.prefix(ctx)}prefix`"
         exampleOutput = f"`This server's prefix is: {gcmds.prefix(ctx)}`\n\n`The global prefixes are:" \
-                        f"`{self.bot.user.mention} or `mb `"
+                        f"`{self.bot.user.mention} or `mbm `"
         await self.syntaxEmbed(ctx,
                                commandName=commandName,
                                syntaxMessage=syntaxMessage,
