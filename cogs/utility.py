@@ -1,5 +1,6 @@
 import json
 import discord
+from datetime import datetime, timedelta
 from discord.ext import commands
 from utils import globalcommands
 
@@ -54,6 +55,15 @@ class Utility(commands.Cog):
                                             description=f"Server prefix has been reset to `m?`",
                                             color=discord.Color.blue())
             await ctx.channel.send(embed=prefixEmbed)
+
+    @commands.command()
+    async def uptime(self, ctx):
+        time_now = int(datetime.now().timestamp())
+        td = timedelta(seconds=time_now - self.bot.uptime)
+        embed = discord.Embed(title="Uptime",
+                              description=f"MarwynnBot has been up and running for\n```\n{str(td)}\n```",
+                              color=discord.Color.blue())
+        return await ctx.channel.send(embed=embed)
 
 
 def setup(client):
