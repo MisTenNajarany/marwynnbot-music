@@ -49,7 +49,7 @@ default_env = ["YOUR_BOT_TOKEN",
 class GlobalCMDS:
 
     def __init__(self, bot: commands.AutoShardedBot = None):
-        self.version = "v2.0.0-rc.1"
+        self.version = "v2.0.0-RC.1"
         self.bot = bot
         if bot:
             self.db = self.bot.db
