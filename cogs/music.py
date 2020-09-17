@@ -5,10 +5,9 @@ from datetime import datetime
 import discord
 import lavalink
 from discord.ext import commands, tasks
-import globalcommands
-from globalcommands import GlobalCMDS
+from utils import globalcommands, premium, customerrors
 
-gcmds = GlobalCMDS()
+gcmds = globalcommands.GlobalCMDS()
 url_rx = re.compile(r'https?://(?:www\.)?.+')
 reactions = ["⏪", "⏯", "⏩", "⏹"]
 plist_reactions = ["💾", "📝"]
@@ -16,30 +15,32 @@ plist_delete_reactions = ["✅", "🛑"]
 
 
 class Music(commands.Cog):
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, bot: commands.AutoShardedBot):
+        global gcmds
+        self.bot = bot
+        gcmds = globalcommands.GlobalCMDS(self.bot)
         self.info = {}
-        self.client.loop.create_task(self.lavalink_setup())
+        self.bot.loop.create_task(self.lavalink_setup())
 
     async def lavalink_setup(self):
-        await self.client.wait_until_ready()
-        if not hasattr(self.client, 'lavalink'):
+        await self.bot.wait_until_ready()
+        if not hasattr(self.bot, 'lavalink'):
             ip = gcmds.env_check("LAVALINK_IP")
             port = gcmds.env_check("LAVALINK_PORT")
             password = gcmds.env_check("LAVALINK_PASSWORD")
             if not ip or not port or not password:
                 print("Make sure your server IP, port, and password are in the .env file")
             else:
-                self.client.lavalink = lavalink.Client(self.client.user.id)
-                self.client.lavalink.add_node(ip, port, password, 'na', 'default-node', name="lavalink")
-                self.client.add_listener(self.client.lavalink.voice_update_handler, 'on_socket_response')
+                self.bot.lavalink = lavalink.Client(self.bot.user.id)
+                self.bot.lavalink.add_node(ip, port, password, 'na', 'default-node', name="lavalink")
+                self.bot.add_listener(self.bot.lavalink.voice_update_handler, 'on_socket_response')
 
         lavalink.add_event_hook(self.track_hook)
         lavalink.add_event_hook(self.update_play)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        player = self.client.lavalink.player_manager.get(member.guild.id)
+        player = self.bot.lavalink.player_manager.get(member.guild.id)
         if member.bot and member.id == int(gcmds.env_check('MARWYNNBOT_ID')):
             if player and after.channel and after.channel.id == int(player.fetch('channel')):
                 player.queue.clear()
@@ -61,7 +62,7 @@ class Music(commands.Cog):
     async def on_reaction_add(self, reaction, user):
         if not reaction.message.guild or not user.voice or reaction.emoji not in reactions:
             return
-        player = self.client.lavalink.player_manager.get(reaction.message.guild.id)
+        player = self.bot.lavalink.player_manager.get(reaction.message.guild.id)
         if not user.bot and player and user.voice.channel.id == int(player.fetch('channel')):
             guild_id = reaction.message.guild.id
             message = self.info[str(guild_id)]['message']
@@ -155,84 +156,50 @@ class Music(commands.Cog):
                         await reaction.message.channel.send(embed=skipped, delete_after=5)
 
     def cog_unload(self):
-        self.client.lavalink._event_hooks.clear()
+        self.bot.lavalink._event_hooks.clear()
         self.info = {}
 
-    def init_playlist(self, ctx):
-        init = {f"{ctx.author.id}": {None: {'urls': []}}}
-        gcmds.json_load('db/playlists.json', init)
-        with open('db/playlists.json', 'r') as f:
-            file = json.load(f)
-            if len(file[str(ctx.author.id)]) > 0:
-                return
+    async def init_playlist(self, ctx):
+        async with self.bot.db.acquire() as con:
+            await con.execute("CREATE TABLE IF NOT EXISTS playlists(id SERIAL, user_id bigint, playlist_name text PRIMARY KEY, urls text[])")
+
+    async def save_playlist(self, ctx, name: str, urls: list):
+        async with self.bot.db.acquire() as con:
+            if not urls:
+                await con.execute(f"UPDATE playlists SET playlist_name = '{name}' WHERE name = '{(await self.get_playlist(ctx, name))[0][0]}'")
             else:
-                file[str(ctx.author.id)] = {None: {'urls': []}}
-                with open('db/playlists.json', 'w') as g:
-                    json.dump(file, g, indent=4)
+                values = f"({ctx.author.id}, '{name}', ARRAY['{', '.join(urls)}'])"
+                await con.execute(f"INSERT INTO playlists(user_id, playlist_name, urls) VALUES {values}")
 
-    def save_playlist(self, ctx, key: str, value: list):
-        with open('db/playlists.json', 'r') as f:
-            file = json.load(f)
-
-        try:
-            file[str(ctx.author.id)][str(key)]['urls'] = value
-        except KeyError:
-            prev = file[str(ctx.author.id)]
-            prev.update({f"{str(key)}": {'urls': value}})
-
-        with open('db/playlists.json', 'w') as g:
-            json.dump(file, g, indent=4)
-
-    def append_playlist(self, ctx, key: str, value):
-        with open('db/playlists.json', 'r') as f:
-            file = json.load(f)
-
-        current_urls = file[str(ctx.author.id)][str(key)]['urls']
-        if isinstance(value, str):
-            current_urls.append(value)
-        if isinstance(value, list):
-            for item in value:
-                current_urls.append(item)
-
-        with open('db/playlists.json', 'w') as g:
-            json.dump(file, g, indent=4)
-
-    def get_playlist(self, ctx, key: str):
-        with open('db/playlists.json', 'r') as f:
-            file = json.load(f)
-            if key is not None:
-                if key in file[str(ctx.author.id)]:
-                    name = key
-                    urls = file[str(ctx.author.id)][str(key)]['urls']
-                else:
-                    name = None
-                    urls = None
-                info = (name, urls)
+    async def append_playlist(self, ctx, name: str, url):
+        async with self.bot.db.acquire() as con:
+            if isinstance(url, list):
+                for elem in list:
+                    await con.execute(f"UPDATE playlists SET urls = array_append(urls, '{elem}') WHERE playlist_name = '{name}'")
             else:
-                info = [(item, file[str(ctx.author.id)][item]['urls']) for item in file[str(ctx.author.id)].keys()]
+                await con.execute(f"UPDATE playlists SET urls = array_append(urls, '{url}') WHERE playlist_name = '{name}'")
 
-        return info
+    async def get_playlist(self, ctx, key: str = None):
+        async with self.bot.db.acquire() as con:
+            if not key:
+                result = await con.fetch(f"SELECT id, playlist_name, urls FROM playlists WHERE user_id = {ctx.author.id}")
+            else:
+                result = await con.fetch(f"SELECT id, playlist_name, urls FROM playlists WHERE user_id = {ctx.author.id} AND playlist_name = '{key}'")
+            return [(record['playlist_name'], record['urls'], record['id']) for record in result] if result else None
 
-    def check_playlist(self, ctx, key: str):
-        with open('db/playlists.json', 'r') as f:
-            file = json.load(f)
-            if not key in file[str(ctx.author.id)]:
-                return False
-            return True
+    async def check_playlist(self, ctx, key: str, get_name=False):
+        if get_name:
+            playlist = await self.get_playlist(ctx, key)
+            return (playlist[0], playlist[1]) if playlist else None
+        else:
+            return True if await self.get_playlist(ctx, key) else False
 
-    def remove_playlist(self, ctx, key: str):
-        with open('db/playlists.json', 'r') as f:
-            file = json.load(f)
-            try:
-                del file[str(ctx.author.id)][key]
-                with open('db/playlists.json', 'w') as g:
-                    json.dump(file, g, indent=4)
-                return True
-            except KeyError:
-                return False
+    async def remove_playlist(self, ctx, name: str):
+        async with self.bot.db.acquire() as con:
+            await con.execute(f"DELETE FROM playlists WHERE playlist_name = '{name}'")
 
     async def ensure_voice(self, ctx):
-        player = self.client.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
+        player = self.bot.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
         should_connect = ctx.command.name == "play"
 
         if not ctx.author.voice or not ctx.author.voice.channel:
@@ -297,11 +264,11 @@ class Music(commands.Cog):
 
     async def connect_to(self, guild_id: int, channel_id: str):
         if channel_id:
-            channel = self.client.get_channel(int(channel_id))
+            channel = self.bot.get_channel(int(channel_id))
             member_ids = [member.id for member in channel.members]
             if int(gcmds.env_check("MARWYNNBOT_ID")) in member_ids:
-                raise globalcommands.MBConnectedError
-        ws = self.client._connection._get_websocket(guild_id)
+                raise customerrors.MBConnectedError(channel)
+        ws = self.bot._connection._get_websocket(guild_id)
         await ws.voice_state(str(guild_id), channel_id)
 
     async def add_reaction_panel(self, message):
@@ -377,9 +344,9 @@ class Music(commands.Cog):
 
     @commands.command()
     async def join(self, ctx):
-        player = self.client.lavalink.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if not player:
-            player = self.client.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
+            player = self.bot.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
         if ctx.author.voice:
             player.store("channel", ctx.author.voice.channel.id)
             if not player.is_connected:
@@ -425,7 +392,7 @@ class Music(commands.Cog):
             return
 
         await self.set_value(ctx.guild.id, "context", ctx)
-        player = self.client.lavalink.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
         if ctx.author.voice:
             if not player.is_connected:
@@ -511,7 +478,7 @@ class Music(commands.Cog):
 
     @commands.command()
     async def queue(self, ctx, *, query: str = None):
-        player = self.client.lavalink.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
         if not player:
             return await self.no_player(ctx)
@@ -643,7 +610,7 @@ class Music(commands.Cog):
         if ctx.author != ctx.guild.owner:
             return await self.not_owner(ctx)
 
-        player = self.client.lavalink.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
         if not player:
             return await self.no_player(ctx)
@@ -680,7 +647,7 @@ class Music(commands.Cog):
         if ctx.author != ctx.guild.owner:
             return await self.not_owner(ctx)
 
-        player = self.client.lavalink.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
         if not player:
             return await self.no_player(ctx)
@@ -715,7 +682,7 @@ class Music(commands.Cog):
 
     @commands.command()
     async def leave(self, ctx):
-        player = self.client.lavalink.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
         if not player:
             return await self.no_player(ctx)
@@ -748,7 +715,7 @@ class Music(commands.Cog):
     async def volume(self, ctx, amount: int = None):
         if not await self.ensure_voice(ctx):
             return
-        player = self.client.lavalink.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
         if not player:
             return await self.no_player(ctx)
@@ -781,49 +748,51 @@ class Music(commands.Cog):
             volume_message_sent = await ctx.channel.send(embed=volumeEmbed)
         await self.set_value(ctx.guild.id, "volume_message", volume_message_sent)
 
-    @commands.group(aliases=['playlists'])
+    @premium.is_premium()
+    @commands.group(invoke_without_command=True, aliases=['playlists'])
     async def playlist(self, ctx):
-        self.init_playlist(ctx)
-
-        name = self.get_playlist(ctx, None)[0][0]
-        urls = self.get_playlist(ctx, None)[0][1]
-        length = len(self.get_playlist(ctx, None))
-
-        if name == "null" and not urls and length == 1 and ctx.invoked_subcommand is None:
+        await self.init_playlist(ctx)
+        playlists = await self.get_playlist(ctx, None)
+        if not playlists:
             no_plist = discord.Embed(title="No Playlists",
                                      description=f"{ctx.author.mention}, you have not made any playlists yet.",
                                      color=discord.Color.dark_red())
             return await ctx.channel.send(embed=no_plist, delete_after=5)
 
+        details = await self.get_playlist(ctx, None)
+
+        length = len(details)
         if length != 1:
             spell = "playlists"
         else:
             spell = "playlist"
-
-        details = self.get_playlist(ctx, None)
-
         index = 0
 
         description = f"{ctx.author.mention}, you have 💽**{length}** {spell}:\n\n"
-        for name, url in details:
+        for name, url, plist_id in details:
             index += 1
             if len(url) != 1:
                 spell = "tracks"
             else:
                 spell = "track"
-            description += f"**{index}:** {name} ⟶ 🎶*{len(url)} {spell}*\n"
+            description += f"**{index}:** {name} ⟶ 🎶*{len(url)} {spell}* [ID: {plist_id}]\n"
 
-        playlistEmbed = discord.Embed(title=f"{ctx.author.display_name}'s Saved Playlists",
-                                      description=description,
-                                      color=discord.Color.blue())
-        if ctx.invoked_subcommand is None:
-            await ctx.channel.send(embed=playlistEmbed, delete_after=60)
+        playlist_embed = discord.Embed(title=f"{ctx.author.display_name}'s Saved Playlists",
+                                       description=description,
+                                       color=discord.Color.blue())
+        await ctx.channel.send(embed=playlist_embed)
 
     @playlist.command()
     async def load(self, ctx, *, playlist_name: str = None):
         await self.set_value(ctx.guild.id, 'queue', [])
-        player = self.client.lavalink.player_manager.get(ctx.guild.id)
 
+        if not playlist_name:
+            no_name = discord.Embed(title="No Playlist Specified",
+                                    description=f"{ctx.author.mention}, please specify a valid playlist name. Do `{await gcmds.prefix(ctx)}playlist` to get a list of your currently saved playlists",
+                                    color=discord.Color.dark_red())
+            return await ctx.channel.send(embed=no_name, delete_after=10)
+
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if not player:
             return await self.no_player(ctx)
 
@@ -840,36 +809,21 @@ class Music(commands.Cog):
                                     color=discord.Color.dark_red())
             return await ctx.channel.send(embed=invalid, delete_after=10)
 
-        if self.get_playlist(ctx, None)[0][0] == 'null' and not self.get_playlist(ctx, None)[0][1]:
+        if not await self.get_playlist(ctx, None):
             no_plist = discord.Embed(title="No Playlists",
                                      description=f"{ctx.author.mention}, you have not made any playlists yet.",
                                      color=discord.Color.dark_red())
             return await ctx.channel.send(embed=no_plist, delete_after=5)
 
-        if playlist_name is None:
-            no_name = discord.Embed(title="Invalid Playlist Name",
-                                    description=f"{ctx.author.mention}, please specify a valid playlist name. Do `{gcmds.prefix(ctx)}playlist` to get a list of your currently saved playlists",
-                                    color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=no_name, delete_after=10)
-
-        index = 0
-        exists = False
-
-        for _ in range(len(self.get_playlist(ctx, None))):
-            if playlist_name == self.get_playlist(ctx, None)[index][0]:
-                exists = True
-                break
-            else:
-                index += 1
-
-        if not exists:
+        details = await self.get_playlist(ctx, playlist_name)
+        if not details:
             no_plist = discord.Embed(title="Invalid Playlist",
                                      description=f"{ctx.author.mention}, you don't have any playlists named **{playlist_name}**",
                                      color=discord.Color.dark_red())
             return await ctx.channel.send(embed=no_plist, delete_after=10)
 
-        for item in self.get_playlist(ctx, playlist_name)[1]:
-            results = await player.node.get_tracks(item)
+        for url in details[0][1]:
+            results = await player.node.get_tracks(url)
             track = results['tracks'][0]
             track = lavalink.models.AudioTrack(track, ctx.author.id, recommended=True)
             player.add(requester=ctx.author.id, track=track)
@@ -882,8 +836,7 @@ class Music(commands.Cog):
 
     @playlist.command(aliases=['edit'])
     async def save(self, ctx):
-        self.init_playlist(ctx)
-
+        await self.init_playlist(ctx)
         try:
             queue = self.info[str(ctx.guild.id)]['queue']
         except KeyError:
@@ -895,7 +848,7 @@ class Music(commands.Cog):
                                      color=discord.Color.dark_red())
             return await ctx.channel.send(embed=no_queue, delete_after=5)
 
-        urls = [f"https://www.youtube.com/watch?v={item['info']['identifier']}" for item in queue]
+        urls = [f"https://www.youtube.com/watch?v={item['identifier']}" for item in queue]
 
         panel = discord.Embed(title="Playlist Save Confirmation",
                               description=f"{ctx.author.mention}, do you want to save or edit a playlist?\n"
@@ -929,8 +882,8 @@ class Music(commands.Cog):
                     panel_message = await ctx.channel.fetch_message(panel.id)
                 except discord.NotFound:
                     return await ctx.channel.send(embed=no_panel, delete_after=5)
-                choice = await self.client.wait_for("reaction_add", check=reaction_check,
-                                                    timeout=30)
+                choice = await self.bot.wait_for("reaction_add", check=reaction_check,
+                                                 timeout=30)
             except asyncio.TimeoutError:
                 timeout = discord.Embed(title="Save Request Timed Out",
                                         description=f"{ctx.author.mention}, your save request timed out. Please try again",
@@ -948,19 +901,9 @@ class Music(commands.Cog):
                 else:
                     continue
 
-        name = self.get_playlist(ctx, None)[0][0]
+        details = await self.get_playlist(ctx, None)
 
-        edit_desc = "💽**Playlists:**\n\n"
-        incr = 0
-        for item in self.get_playlist(ctx, None):
-            incr += 1
-            if len(item[1]) != 1:
-                spell = "tracks"
-            else:
-                spell = "track"
-            edit_desc += f"**{incr}**: {item[0]} ⟶ 🎶{len(item[1])} {spell}\n"
-
-        if action == "save" or name == "null":
+        if not details or action == "save":
             try:
                 getName = discord.Embed(title="Specify the Playlist Name",
                                         description=f"{ctx.author.mention}, please specify what the playlist name should be",
@@ -970,7 +913,7 @@ class Music(commands.Cog):
                 await ctx.channel.send(embed=no_panel, delete_after=5)
             while True:
                 try:
-                    reply = await self.client.wait_for("message", check=from_user, timeout=30)
+                    reply = await self.bot.wait_for("message", check=from_user, timeout=30)
                 except asyncio.TimeoutError:
                     timeout = discord.Embed(title="Save Request Timed Out",
                                             description=f"{ctx.author.mention}, you did not specify a name within the "
@@ -979,21 +922,27 @@ class Music(commands.Cog):
                     return await panel.edit(embed=timeout, delete_after=10)
                 else:
                     break
+            await gcmds.smart_delete(reply)
 
             saveEmbed = discord.Embed(color=discord.Color.blue())
             plist_name = reply.content
             saveEmbed.title = "Saved Playlist"
             saveEmbed.description = f"💽Playlist Name: {plist_name}\n🎶Tracks: {len(queue)}"
             try:
-                await panel.edit(embed=saveEmbed, delete_after=10)
+                await panel.edit(embed=saveEmbed)
+                await self.save_playlist(ctx, plist_name, urls)
             except discord.NotFound:
-                return await ctx.channel.send(embed=no_panel, delete_after=10)
-            self.save_playlist(ctx, plist_name, urls)
-            if name == "null":
-                self.remove_playlist(ctx, 'null')
+                return await ctx.channel.send(embed=no_panel, delete_after=30)
         else:
+            edit_desc = "💽**Playlists:**\n\n"
+            for counter, item in enumerate(details, 1):
+                if len(item[1]) != 1:
+                    spell = "tracks"
+                else:
+                    spell = "track"
+                edit_desc += f"**{counter}**: {item[0]} ⟶ 🎶*{len(item[1])} {spell}* [ID: {item[2]}]\n"
             try:
-                getName = discord.Embed(title="Specify the Playlist Index",
+                getName = discord.Embed(title="Specify the Playlist Name",
                                         description=f"{ctx.author.mention}, type the name of the playlist you want to "
                                                     f"edit:\n\n{edit_desc}",
                                         color=discord.Color.blue())
@@ -1002,7 +951,7 @@ class Music(commands.Cog):
                 return await ctx.channel.send(embed=no_panel, delete_after=5)
             while True:
                 try:
-                    reply = await self.client.wait_for("message", check=from_user, timeout=30)
+                    reply = await self.bot.wait_for("message", check=from_user, timeout=30)
                 except asyncio.TimeoutError:
                     timeout = discord.Embed(title="Save Request Timed Out",
                                             description=f"{ctx.author.mention}, you did not specify a name within the "
@@ -1010,23 +959,23 @@ class Music(commands.Cog):
                                             color=discord.Color.blue())
                     return await panel.edit(embed=timeout, delete_after=10)
                 else:
-                    name = reply.content
-                    if not self.check_playlist(ctx, name):
+                    info = await self.check_playlist(ctx, reply.content, get_name=True)
+                    if not info:
                         continue
                     break
+            await gcmds.smart_delete(reply)
             try:
                 getName = discord.Embed(title="Change Playlist Name",
                                         description=f"{ctx.author.mention}, please specify what the playlist name "
                                                     f"should be *(enter \"skip\" to keep the playlist's current "
-                                                    f"name)*\n\n**Current Name:** {self.get_playlist(ctx, name)[0]}",
+                                                    f"name)*\n\n**Current Name:** {info[0]}",
                                         color=discord.Color.blue())
                 await panel.edit(embed=getName)
             except discord.NotFound:
                 await ctx.channel.send(embed=no_panel, delete_after=5)
             while True:
                 try:
-                    name_reply = await self.client.wait_for("message", check=from_user,
-                                                            timeout=30)
+                    name_reply = await self.bot.wait_for("message", check=from_user, timeout=30)
                 except asyncio.TimeoutError:
                     timeout = discord.Embed(title="Save Request Timed Out",
                                             description=f"{ctx.author.mention}, you did not specify a name within the "
@@ -1035,24 +984,25 @@ class Music(commands.Cog):
                     return await panel.edit(embed=timeout, delete_after=10)
                 else:
                     break
+            await gcmds.smart_delete(name_reply)
             if name_reply.content != "skip":
                 plist_name = name_reply.content
-                self.save_playlist(ctx, plist_name, self.get_playlist(ctx, name)[1])
-                self.remove_playlist(ctx, name)
+                await self.save_playlist(ctx, plist_name, urls)
 
             else:
-                plist_name = name
+                plist_name = info[0]
 
-            info = self.get_playlist(ctx, plist_name)
+            info = await self.get_playlist(ctx, plist_name)
 
-            if len(info[1]) != 1:
+            if len(info[0][1]) != 1:
                 spell = "tracks"
             else:
                 spell = "track"
             edited_plist = discord.Embed(title="Successfully Edited Playlist",
                                          description=f"{ctx.author.mention}, your playlist has been "
-                                                     f"edited:\n\n💽**Playlist Name:** {info[0]}\n"
-                                                     f"🎶**Track Count:** {len(info[1])} {spell}",
+                                                     f"edited:\n\n💽**Playlist Name:** {info[0][0]}\n"
+                                                     f"🎶**Track Count:** {len(info[0][1])} {spell}\n"
+                                                     f"**ID:** {info[0][2]}",
                                          color=discord.Color.blue())
             try:
                 await panel.edit(embed=edited_plist, delete_after=20)
@@ -1061,7 +1011,7 @@ class Music(commands.Cog):
 
     @playlist.command()
     async def add(self, ctx):
-        self.init_playlist(ctx)
+        await self.init_playlist(ctx)
 
         def from_user(message):
             if message.author.id != ctx.author.id:
@@ -1071,13 +1021,13 @@ class Music(commands.Cog):
 
         playlists = ""
         index = 1
-        details = self.get_playlist(ctx, None)
-        for name, url in details:
+        details = await self.get_playlist(ctx, None)
+        for name, url, playlist_id in details:
             if len(url) != 1:
                 spell = "tracks"
             else:
                 spell = "track"
-            playlists += f"**{index}**: {name} ⟶ 🎶{len(url)} {spell}\n"
+            playlists += f"**{index}**: {name} ⟶ 🎶*{len(url)} {spell}* [ID: {playlist_id}]\n"
             index += 1
 
         panel_embed = discord.Embed(title="Add Tracks to Playlist",
@@ -1097,7 +1047,7 @@ class Music(commands.Cog):
 
         while True:
             try:
-                message = await self.client.wait_for("message", check=from_user, timeout=30)
+                message = await self.bot.wait_for("message", check=from_user, timeout=30)
             except asyncio.TimeoutError:
                 try:
                     return await panel.edit(embed=timeout, delete_after=10)
@@ -1109,11 +1059,12 @@ class Music(commands.Cog):
                         return await panel.edit(embed=cancelled, delete_after=10)
                     except discord.NotFound:
                         return await ctx.channel.send(embed=cancelled, delete_after=10)
-                elif not self.check_playlist(ctx, message.content):
+                elif not await self.check_playlist(ctx, message.content):
                     continue
                 else:
                     name = message.content
                     break
+        await gcmds.smart_delete(message)
 
         try:
             panel_embed.description = f"{ctx.author.mention}, please enter a YouTube video link or a YouTube playlist " \
@@ -1123,7 +1074,7 @@ class Music(commands.Cog):
             return await ctx.channel.send(embed=cancelled, delete_after=10)
 
         try:
-            message_link = await self.client.wait_for("message", check=from_user, timeout=30)
+            message_link = await self.bot.wait_for("message", check=from_user, timeout=30)
         except asyncio.TimeoutError:
             try:
                 return await panel.edit(embed=timeout, delete_after=10)
@@ -1131,6 +1082,7 @@ class Music(commands.Cog):
                 return await ctx.channel.send(embed=timeout, delete_after=10)
         else:
             yt_link = message_link.content
+            await gcmds.smart_delete(message_link)
 
         if not url_rx.match(yt_link) or "youtube.com" not in yt_link:
             try:
@@ -1138,15 +1090,15 @@ class Music(commands.Cog):
             except discord.NotFound:
                 return await ctx.channel.send(embed=invalid, delete_after=10)
         else:
-            player = self.client.lavalink.player_manager.get(ctx.guild.id)
+            player = self.bot.lavalink.player_manager.get(ctx.guild.id)
             if not player:
-                player = self.client.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
+                player = self.bot.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
             results = await player.node.get_tracks(yt_link)
             tracks = results['tracks']
             if results['loadType'] == 'PLAYLIST_LOADED':
                 info = [(track['info']['title'], track['info']['uri']) for track in tracks]
                 urls = [track['info']['uri'] for track in tracks]
-                self.append_playlist(ctx, name, urls)
+                await self.append_playlist(ctx, name, urls)
                 tracks_added = ""
                 index = 1
                 for title, url in info:
@@ -1156,7 +1108,7 @@ class Music(commands.Cog):
             else:
                 url = tracks[0]['info']['uri']
                 title = tracks[0]['info']['title']
-                self.append_playlist(ctx, name, url)
+                await self.append_playlist(ctx, name, url)
                 panel_embed.description = f"Added the following track to {name}:\n**1:** [{title}]({url})"
 
             try:
@@ -1166,7 +1118,7 @@ class Music(commands.Cog):
 
     @playlist.command(aliases=['delete'])
     async def remove(self, ctx):
-        self.init_playlist(ctx)
+        await self.init_playlist(ctx)
 
         def reaction_check(reaction, user):
             if user == ctx.author and reaction.emoji in plist_delete_reactions and reaction.message.id == panel.id:
@@ -1180,29 +1132,22 @@ class Music(commands.Cog):
             else:
                 return False
 
-        name = self.get_playlist(ctx, None)[0][0]
-        urls = self.get_playlist(ctx, None)[0][1]
-        length = len(self.get_playlist(ctx, None))
+        details = await self.get_playlist(ctx, None)
 
-        if name == "null" and not urls and length == 1:
+        if not details:
             no_plist = discord.Embed(title="No Playlists",
                                      description=f"{ctx.author.mention}, you have not made any playlists yet.",
                                      color=discord.Color.dark_red())
             return await ctx.channel.send(embed=no_plist, delete_after=5)
 
-        details = self.get_playlist(ctx, None)
-
-        index = 0
-
         user_playlists = f"{ctx.author.mention}, type the name of the playlist you want to delete *(type \"cancel\" " \
                          f"to cancel)*:\n\n "
-        for name, url in details:
-            index += 1
-            if len(url) != 1:
+        for counter, item in enumerate(details, 1):
+            if len(item[1]) != 1:
                 spell = "tracks"
             else:
                 spell = "track"
-            user_playlists += f"**{index}:** {name} ⟶ 🎶*{len(url)} {spell}*\n"
+            user_playlists += f"**{counter}:** {item[0]} ⟶ 🎶*{len(item[1])} {spell}* [ID: {item[2]}]\n"
 
         embed = discord.Embed(title="Delete Playlist",
                               description=user_playlists,
@@ -1219,7 +1164,7 @@ class Music(commands.Cog):
                     panel_message = await ctx.channel.fetch_message(panel.id)
                 except discord.NotFound:
                     return await ctx.channel.send(embed=no_panel, delete_after=5)
-                choice = await self.client.wait_for("message", check=from_user, timeout=30)
+                choice = await self.bot.wait_for("message", check=from_user, timeout=30)
             except asyncio.TimeoutError:
                 timeout = discord.Embed(title="Remove Request Timed Out",
                                         description=f"{ctx.author.mention}, you did not specify a name within the "
@@ -1233,14 +1178,15 @@ class Music(commands.Cog):
                                               color=discord.Color.blue())
                     return await panel.edit(embed=cancelled, delete_after=10)
                 valid = False
-                for names, urls in details:
-                    if choice.content == names:
+                for name, urls, playlist_id in details:
+                    if choice.content == name:
                         name = choice.content
                         valid = True
                         break
                 if valid:
                     break
                 continue
+        await gcmds.smart_delete(choice)
 
         embed.description = "React with ✅ to confirm or 🛑 to cancel playlist deletion"
 
@@ -1253,8 +1199,8 @@ class Music(commands.Cog):
                         await panel.add_reaction(reaction)
                 except discord.NotFound:
                     return await ctx.channel.send(embed=no_panel, delete_after=5)
-                reacted = await self.client.wait_for("reaction_add", check=reaction_check,
-                                                     timeout=30)
+                reacted = await self.bot.wait_for("reaction_add", check=reaction_check,
+                                                  timeout=30)
             except asyncio.TimeoutError:
                 timeout = discord.Embed(title="Remove Request Timed Out",
                                         description=f"{ctx.author.mention}, you did not react within the time limit",
@@ -1273,18 +1219,18 @@ class Music(commands.Cog):
                     continue
 
         if action == "confirm":
-            test = self.remove_playlist(ctx, name)
+            test = await self.remove_playlist(ctx, name)
             edited = discord.Embed(title="Deleted Playlist",
                                    description=f"{ctx.author.mention}, your playlist *\"{name}\"* was deleted",
                                    color=discord.Color.blue())
             try:
-                return await panel.edit(embed=edited, delete_after=10)
+                return await panel.edit(embed=edited)
             except discord.NotFound:
-                return await ctx.channel.send(embed=edited, delete_after=10)
+                return await ctx.channel.send(embed=edited)
         try:
-            await panel.edit(embed=no_panel, delete_after=5)
+            await panel.edit(embed=no_panel, delete_after=30)
         except discord.NotFound:
-            await ctx.channel.send(embed=no_panel, delete_after=5)
+            await ctx.channel.send(embed=no_panel, delete_after=30)
 
 
 def setup(client):

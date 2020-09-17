@@ -3,21 +3,21 @@ import os
 import discord
 from discord.ext import commands
 from discord.ext.commands.errors import CommandInvokeError
-from globalcommands import GlobalCMDS
+from utils import globalcommands
 
-gcmds = GlobalCMDS()
+gcmds = globalcommands.GlobalCMDS()
 
 
 class Owner(commands.Cog):
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, bot: commands.AutoShardedBot):
+        self.bot = bot
 
     @commands.command(aliases=['l', 'ld'])
     @commands.is_owner()
     async def load(self, ctx, extension):
         try:
-            self.client.load_extension(f'cogs.{extension}')
+            self.bot.load_extension(f'cogs.{extension}')
         except CommandInvokeError:
             title = "Cog Load Fail"
             description = f"Failed to load cog {extension}, it is already loaded"
@@ -36,7 +36,7 @@ class Owner(commands.Cog):
     @commands.is_owner()
     async def unload(self, ctx, extension):
         try:
-            self.client.unload_extension(f'cogs.{extension}')
+            self.bot.unload_extension(f'cogs.{extension}')
         except CommandInvokeError:
             title = "Cog Unoad Fail"
             description = f"Failed to unload cog {extension}, it is already unloaded"
@@ -58,7 +58,7 @@ class Owner(commands.Cog):
             print("==========================")
             for filenameReload in os.listdir('./cogs'):
                 if filenameReload.endswith('.py'):
-                    self.client.reload_extension(f'cogs.{filenameReload[:-3]}')
+                    self.bot.reload_extension(f'cogs.{filenameReload[:-3]}')
                     print(f'Cog "{filenameReload[:-3].capitalize()}" has been reloaded')
             reloadEmbed = discord.Embed(title="Reload Success",
                                         description="Successfully reloaded all cogs",
@@ -67,7 +67,7 @@ class Owner(commands.Cog):
             print("==========================")
         else:
             print("==========================")
-            self.client.reload_extension(f'cogs.{extension}')
+            self.bot.reload_extension(f'cogs.{extension}')
             print(f'Cog "{extension}" has been reloaded')
             reloadEmbed = discord.Embed(title="Reload Success",
                                         description=f"Successfully reloaded cog `{extension}`",
@@ -82,7 +82,7 @@ class Owner(commands.Cog):
                                       description="Bot is logging out",
                                       color=discord.Color.blue())
         await ctx.channel.send(embed=shutdownEmbed)
-        await self.client.logout()
+        await self.bot.logout()
 
 
 def setup(client):

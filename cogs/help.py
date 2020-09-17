@@ -2,15 +2,17 @@ import random
 from datetime import datetime
 import discord
 from discord.ext import commands
-from globalcommands import GlobalCMDS
+from utils import globalcommands
 
-gcmds = GlobalCMDS()
+gcmds = globalcommands.GlobalCMDS()
 
 
 class Help(commands.Cog):
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, bot: commands.AutoShardedBot):
+        global gcmds
+        self.bot = bot
+        gcmds = globalcommands.GlobalCMDS(self.bot)
 
     async def syntaxEmbed(self, ctx, commandName, syntaxMessage, exampleUsage=None, exampleOutput=None,
                           userPerms=None, botPerms=None, specialCases=None, thumbnailURL="https://www.jing.fm/clipimg"
@@ -30,7 +32,7 @@ class Help(commands.Cog):
             embed.add_field(name="Output",
                             value=exampleOutput,
                             inline=False)
-        cmdName = self.client.get_command(ctx.command.name)
+        cmdName = self.bot.get_command(ctx.command.name)
         aliases = cmdName.aliases
         if aliases:
             embed.add_field(name="Aliases",
@@ -73,11 +75,11 @@ class Help(commands.Cog):
         helpEmbed.set_footer(text=timestamp,
                                 icon_url=ctx.author.avatar_url)
 
-        cogNames = [i for i in self.client.cogs]
-        cogs = [self.client.get_cog(j) for j in cogNames]
+        cogNames = [i for i in self.bot.cogs]
+        cogs = [self.bot.get_cog(j) for j in cogNames]
         strings = {}
         for name in cogNames:
-            cog_commands = self.client.get_cog(name).get_commands()
+            cog_commands = self.bot.get_cog(name).get_commands()
             strings.update({name.lower(): [command.name.lower() for command in cog_commands]})
 
         helpCmds = f"`{'` `'.join(strings['help'])}`"
@@ -224,7 +226,7 @@ class Help(commands.Cog):
         syntaxMessage = f"`{gcmds.prefix(ctx)}prefix`"
         exampleUsage = f"`{gcmds.prefix(ctx)}prefix`"
         exampleOutput = f"`This server's prefix is: {gcmds.prefix(ctx)}`\n\n`The global prefixes are:" \
-                        f"`{self.client.user.mention} or `mb `"
+                        f"`{self.bot.user.mention} or `mb `"
         await self.syntaxEmbed(ctx,
                                commandName=commandName,
                                syntaxMessage=syntaxMessage,

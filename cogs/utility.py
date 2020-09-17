@@ -1,16 +1,18 @@
 import json
 import discord
 from discord.ext import commands
-from globalcommands import GlobalCMDS
+from utils import globalcommands
 
 
-gcmds = GlobalCMDS()
+gcmds = globalcommands.GlobalCMDS()
 
 
 class Utility(commands.Cog):
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, bot: commands.AutoShardedBot):
+        global gcmds
+        self.bot = bot
+        gcmds = globalcommands.GlobalCMDS(self.bot)
 
     @commands.command()
     async def invite(self, ctx):
@@ -31,32 +33,27 @@ class Utility(commands.Cog):
                               value=f"The current server prefix is: `{gcmds.prefix(ctx)}`",
                               inline=False)
         prefixEmbed.add_field(name="Global Prefixes",
-                              value=f"{self.client.user.mention} or `mb ` - *ignorecase*",
+                              value=f"{self.bot.user.mention} or `mbm ` - *ignorecase*",
                               inline=False)
         await ctx.channel.send(embed=prefixEmbed)
 
     @commands.command(aliases=['sp', 'setprefix'])
     @commands.has_permissions(manage_guild=True)
     async def setPrefix(self, ctx, prefix):
-        with open('db/prefixes.json', 'r') as f:
-            prefixes = json.load(f)
+        async with self.db.acquire() as con:
             if prefix != 'reset':
-                prefixes[str(ctx.guild.id)] = prefix
+                await con.execute(f"UPDATE guild_mb SET custom_prefix = {prefix} WHERE guild_id = {ctx.guild.id}")
+                prefixEmbed = discord.Embed(title='Server Prefix Set',
+                                            description=f"Server prefix is now set to `{prefix}` \n\n"
+                                                        f"You will still be able to use {self.bot.user.mention} "
+                                                        f"and `mbm ` as prefixes",
+                                            color=discord.Color.blue())
             else:
-                prefixes[str(ctx.guild.id)] = 'm!'
-        with open('db/prefixes.json', 'w') as f:
-            json.dump(prefixes, f, indent=4)
-        if prefix != 'reset':
-            prefixEmbed = discord.Embed(title='Server Prefix Set',
-                                        description=f"Server prefix is now set to `{prefix}` \n\n"
-                                                    f"You will still be able to use {self.client.user.mention} "
-                                                    f"and `mb ` as prefixes",
-                                        color=discord.Color.blue())
-        else:
-            prefixEmbed = discord.Embed(title='Server Prefix Set',
-                                        description=f"Server prefix has been reset to `m!`",
-                                        color=discord.Color.blue())
-        await ctx.channel.send(embed=prefixEmbed)
+                await con.execute(f"UPDATE guild_mb SET custom_prefix = 'm?' WHERE guild_id = {ctx.guild.id}")
+                prefixEmbed = discord.Embed(title='Server Prefix Set',
+                                            description=f"Server prefix has been reset to `m?`",
+                                            color=discord.Color.blue())
+            await ctx.channel.send(embed=prefixEmbed)
 
 
 def setup(client):
