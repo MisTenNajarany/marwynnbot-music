@@ -16,7 +16,7 @@ from utils import customerrors, globalcommands
 
 
 gcmds = globalcommands.GlobalCMDS()
-version = f"Running MarwynnBot {gcmds.version}"
+version = f"Running MarwynnBot Music {gcmds.version}"
 
 if os.path.exists('discord.log'):
     os.remove('discord.log')
@@ -95,7 +95,8 @@ class Bot(commands.AutoShardedBot):
         at = await self.get_aliases()
         activity1 = discord.Activity(name="m?h for help!", type=discord.ActivityType.listening)
         activity2 = discord.Activity(name="Invite MarwynnBot!", type=discord.ActivityType.playing)
-        activityList = [activity1, activity2]
+        activity3 = discord.Activity(name=f"MarwynnBot Music {gcmds.version}", type=discord.ActivityType.playing)
+        activityList = [activity1, activity2, activity3]
         activity = random.choice(activityList)
         await self.change_presence(status=discord.Status.online, activity=activity)
 
