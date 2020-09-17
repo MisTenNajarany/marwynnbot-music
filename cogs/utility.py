@@ -61,7 +61,7 @@ class Utility(commands.Cog):
         time_now = int(datetime.now().timestamp())
         td = timedelta(seconds=time_now - self.bot.uptime)
         embed = discord.Embed(title="Uptime",
-                              description=f"MarwynnBot has been up and running for\n```\n{str(td)}\n```",
+                              description=f"MarwynnBot Music has been up and running for\n```\n{str(td)}\n```",
                               color=discord.Color.blue())
         return await ctx.channel.send(embed=embed)
 
