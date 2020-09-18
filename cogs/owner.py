@@ -30,7 +30,7 @@ class Owner(commands.Cog):
         loadEmbed = discord.Embed(title=title,
                                   description=description,
                                   color=color)
-        await ctx.channel.send(embed=loadEmbed, delete_after=5)
+        await ctx.channel.send(embed=loadEmbed)
 
     @commands.command(aliases=['ul', 'uld'])
     @commands.is_owner()
@@ -49,7 +49,7 @@ class Owner(commands.Cog):
         unloadEmbed = discord.Embed(title=title,
                                     description=description,
                                     color=color)
-        await ctx.channel.send(embed=unloadEmbed, delete_after=5)
+        await ctx.channel.send(embed=unloadEmbed)
 
     @commands.command(aliases=['r', 'rl'])
     @commands.is_owner()
@@ -63,7 +63,7 @@ class Owner(commands.Cog):
             reloadEmbed = discord.Embed(title="Reload Success",
                                         description="Successfully reloaded all cogs",
                                         color=discord.Color.blue())
-            await ctx.channel.send(embed=reloadEmbed, delete_after=5)
+            await ctx.channel.send(embed=reloadEmbed)
             print("==========================")
         else:
             print("==========================")
@@ -72,7 +72,7 @@ class Owner(commands.Cog):
             reloadEmbed = discord.Embed(title="Reload Success",
                                         description=f"Successfully reloaded cog `{extension}`",
                                         color=discord.Color.blue())
-            await ctx.channel.send(embed=reloadEmbed, delete_after=5)
+            await ctx.channel.send(embed=reloadEmbed)
             print("==========================")
 
     @commands.command(aliases=['taskkill'])

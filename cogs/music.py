@@ -56,7 +56,7 @@ class Music(commands.Cog):
                                           description=f"I have left this voice channel because {member.mention} just joined. "
                                           "Please have me join a different channel.",
                                           color=discord.Color.dark_red())
-                    return await channel.send(embed=embed, delete_after=15)
+                    return await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -85,7 +85,7 @@ class Music(commands.Cog):
                                                 color=discord.Color.blue())
                         stopped.set_footer(text=f"Executed by {user.display_name} " +
                                                 "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now()))
-                        await reaction.message.channel.send(embed=stopped, delete_after=5)
+                        await reaction.message.channel.send(embed=stopped)
                     if reaction.emoji == "⏪":
                         if not queue:
                             rewind = discord.Embed(title="No Tracks to Rewind",
@@ -98,7 +98,7 @@ class Music(commands.Cog):
                                                        description=f"{user.mention}, this is the first song in queue",
                                                        color=discord.Color.dark_red())
                                 try:
-                                    rewind_message_sent = await rewind_message.edit(embed=rewind, delete_after=5)
+                                    rewind_message_sent = await rewind_message.edit(embed=rewind)
                                 except (discord.NotFound, AttributeError):
                                     rewind_message_sent = await reaction.message.channel.send(embed=rewind,
                                                                                               delete_after=5)
@@ -114,9 +114,9 @@ class Music(commands.Cog):
                                                                f".youtube.com/watch?v={track['identifier']})",
                                                    color=discord.Color.blue())
                         try:
-                            rewind_message_sent = await rewind_message.edit(embed=rewind, delete_after=5)
+                            rewind_message_sent = await rewind_message.edit(embed=rewind)
                         except (discord.NotFound, AttributeError):
-                            rewind_message_sent = await reaction.message.channel.send(embed=rewind, delete_after=5)
+                            rewind_message_sent = await reaction.message.channel.send(embed=rewind)
                         await self.set_value(guild_id, 'rewind_message', rewind_message_sent)
                     if reaction.emoji == "⏯":
                         paused = not paused
@@ -132,7 +132,7 @@ class Music(commands.Cog):
                         pauseEmbed.set_footer(text=f"Executed by {user.display_name} " +
                                                    "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now()))
                         try:
-                            await paused_message.edit(embed=pauseEmbed, delete_after=5)
+                            await paused_message.edit(embed=pauseEmbed)
                             paused_message_sent = None
                         except (discord.NotFound, AttributeError):
                             paused_message_sent = await reaction.message.channel.send(embed=pauseEmbed)
@@ -153,7 +153,7 @@ class Music(commands.Cog):
                                                     color=discord.Color.blue())
                             skipped.set_footer(text=f"Executed by {user.display_name} " +
                                                     "at: {:%m/%d/%Y %H:%M:%S}".format(datetime.now()))
-                        await reaction.message.channel.send(embed=skipped, delete_after=5)
+                        await reaction.message.channel.send(embed=skipped)
 
     def cog_unload(self):
         self.bot.lavalink._event_hooks.clear()
@@ -206,7 +206,7 @@ class Music(commands.Cog):
             not_conn = discord.Embed(title="Not In Voice Channel",
                                      description=f"{ctx.author.mention}, you must first join a voice channel",
                                      color=discord.Color.dark_red())
-            await ctx.channel.send(embed=not_conn, delete_after=5)
+            await ctx.channel.send(embed=not_conn)
             return False
 
         if not player.is_connected:
@@ -217,7 +217,7 @@ class Music(commands.Cog):
                                           description=f"{ctx.author.mention}, please make sure I have the `connect` and "
                                                       f"`speak` permissions for that voice channel",
                                           color=discord.Color.dark_red())
-                    await ctx.channel.send(embed=insuf, delete_after=5)
+                    await ctx.channel.send(embed=insuf)
                     return False
                 player.store('channel', ctx.author.voice.channel.id)
                 await self.connect_to(ctx.guild.id, str(ctx.author.voice.channel.id))
@@ -226,7 +226,7 @@ class Music(commands.Cog):
                 diff = discord.Embed(title="Different Voice Channels",
                                      description=f"{ctx.author.mention}, make sure we're both in the same voice channel",
                                      color=discord.Color.dark_red())
-                await ctx.channel.send(embed=diff, delete_after=5)
+                await ctx.channel.send(embed=diff)
                 return False
 
         return True
@@ -279,14 +279,14 @@ class Music(commands.Cog):
         invalid = discord.Embed(title="No Music Player Instance",
                                 description=f"{ctx.author.mention}, I don't have a music player instance started",
                                 color=discord.Color.dark_red())
-        return await ctx.channel.send(embed=invalid, delete_after=5)
+        return await ctx.channel.send(embed=invalid)
 
     async def not_owner(self, ctx):
         embed = discord.Embed(title="Not Server Owner",
                               description=f"{ctx.author.mention}, you must be the owner of this server to use this "
                                           f"command",
                               color=discord.Color.dark_red())
-        await ctx.channel.send(embed=embed, delete_after=5)
+        await ctx.channel.send(embed=embed)
 
     async def set_value(self, guild_id: int, key: str, value):
         try:
@@ -357,7 +357,7 @@ class Music(commands.Cog):
                 joinEmbed.set_thumbnail(url="https://vignette.wikia.nocookie.net/mario/images/0/04/Music_Toad.jpg"
                                             "/revision/latest/top-crop/width/500/height/500?cb=20180812231020")
                 joinEmbed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-                await ctx.channel.send(embed=joinEmbed, delete_after=5)
+                await ctx.channel.send(embed=joinEmbed)
                 return
             elif ctx.author.voice.channel == ctx.guild.me.voice.channel:
                 joinEmbed = discord.Embed(title="Already Connected to Voice Channel",
@@ -366,7 +366,7 @@ class Music(commands.Cog):
                 joinEmbed.set_thumbnail(url="https://vignette.wikia.nocookie.net/mario/images/0/04/Music_Toad.jpg"
                                             "/revision/latest/top-crop/width/500/height/500?cb=20180812231020")
                 joinEmbed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-                await ctx.channel.send(embed=joinEmbed, delete_after=5)
+                await ctx.channel.send(embed=joinEmbed)
                 return
             else:
                 await self.connect_to(ctx.guild.id, ctx.author.voice.channel.id)
@@ -376,14 +376,14 @@ class Music(commands.Cog):
                 joinEmbed.set_thumbnail(url="https://vignette.wikia.nocookie.net/mario/images/0/04/Music_Toad.jpg"
                                             "/revision/latest/top-crop/width/500/height/500?cb=20180812231020")
                 joinEmbed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-                await ctx.channel.send(embed=joinEmbed, delete_after=5)
+                await ctx.channel.send(embed=joinEmbed)
                 return
         else:
             joinError = discord.Embed(title="Error",
                                       description=f"{ctx.author.mention}, please join a voice channel to use this "
                                                   f"command",
                                       color=discord.Color.dark_red())
-            await ctx.channel.send(embed=joinError, delete_after=5)
+            await ctx.channel.send(embed=joinError)
             return
 
     @commands.command()
@@ -407,7 +407,7 @@ class Music(commands.Cog):
                                             description=f"{ctx.author.mention}, please add a song to the queue to "
                                                         f"start playing",
                                             color=discord.Color.dark_red())
-                    await ctx.channel.send(embed=noqueue, delete_after=15)
+                    await ctx.channel.send(embed=noqueue)
                     return
 
         query = query.strip('<>')
@@ -421,7 +421,7 @@ class Music(commands.Cog):
             notFound = discord.Embed(title="Nothing Found",
                                      description=f"{ctx.author.mention}, I couldn't find anything for *{query}*",
                                      color=discord.Color.dark_red())
-            await ctx.channel.send(embed=notFound, delete_after=15)
+            await ctx.channel.send(embed=notFound)
             return
 
         embed = discord.Embed(color=discord.Color.blue())
@@ -490,7 +490,7 @@ class Music(commands.Cog):
                                             description=f"{ctx.author.mention}, I must be connected to a voice "
                                                         f"channel to be able to add songs to the queue",
                                             color=discord.Color.dark_red())
-                    await ctx.channel.send(embed=notConn, delete_after=15)
+                    await ctx.channel.send(embed=notConn)
                     return
                 else:
                     query = query.strip('<>')
@@ -504,7 +504,7 @@ class Music(commands.Cog):
                         notFound = discord.Embed(title="Nothing Found",
                                                  description=f"{ctx.author.mention}, I couldn't find anything for *{query}*",
                                                  color=discord.Color.dark_red())
-                        await ctx.channel.send(embed=notFound, delete_after=15)
+                        await ctx.channel.send(embed=notFound)
                         return
 
                     embed = discord.Embed(color=discord.Color.blue())
@@ -562,7 +562,7 @@ class Music(commands.Cog):
                                         description=f"{ctx.author.mention}, you must be connected to a voice channel "
                                                     f"to be able to add songs to the queue",
                                         color=discord.Color.dark_red())
-                await ctx.channel.send(embed=notConn, delete_after=15)
+                await ctx.channel.send(embed=notConn)
                 return
         else:
             if player.is_playing:
@@ -619,7 +619,7 @@ class Music(commands.Cog):
             no_queue = discord.Embed(title="Nothing in Queue",
                                      description=f"{ctx.author.mention}, there is already nothing in my queue",
                                      color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=no_queue, delete_after=5)
+            return await ctx.channel.send(embed=no_queue)
 
         player.queue.clear()
         await self.set_value(ctx.guild.id, 'queue', [])
@@ -656,19 +656,19 @@ class Music(commands.Cog):
             invalid = discord.Embed(title="Error",
                                     description=f"{ctx.author.mention}, I am not currently in a voice channel",
                                     color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=invalid, delete_after=5)
+            return await ctx.channel.send(embed=invalid)
 
         if not ctx.author.voice or (player.is_connected and ctx.author.voice.channel.id != int(player.channel_id)):
             invalid = discord.Embed(title="Error",
                                     description=f"{ctx.author.mention}, you can only execute this command when you "
                                                 f"are connected to the same voice channel as I am",
                                     color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=invalid, delete_after=10)
+            return await ctx.channel.send(embed=invalid)
         if not player.queue and not player.is_playing:
             invalid = discord.Embed(title="Error",
                                     description=f"{ctx.author.mention}, my queue is empty",
                                     color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=invalid, delete_after=5)
+            return await ctx.channel.send(embed=invalid)
 
         player.queue.clear()
         await player.stop()
@@ -678,7 +678,7 @@ class Music(commands.Cog):
                                 description=f"{ctx.author.mention}, I have stoppped the music player and cleared the "
                                             f"queue",
                                 color=discord.Color.blue())
-        await ctx.channel.send(embed=stopped, delete_after=5)
+        await ctx.channel.send(embed=stopped)
 
     @commands.command()
     async def leave(self, ctx):
@@ -691,14 +691,14 @@ class Music(commands.Cog):
             invalid = discord.Embed(title="Error",
                                     description=f"{ctx.author.mention}, I am not currently in a voice channel",
                                     color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=invalid, delete_after=5)
+            return await ctx.channel.send(embed=invalid)
 
         if not ctx.author.voice or (player.is_connected and ctx.author.voice.channel.id != int(player.channel_id)):
             invalid = discord.Embed(title="Error",
                                     description=f"{ctx.author.mention}, you can only execute this command when you "
                                                 f"are connected to the same voice channel as I am",
                                     color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=invalid, delete_after=10)
+            return await ctx.channel.send(embed=invalid)
 
         player.queue.clear()
         await player.stop()
@@ -709,7 +709,7 @@ class Music(commands.Cog):
         disconnected.set_thumbnail(url="https://i.pinimg.com/originals/56/3d/72/563d72539bbd9fccfbb427cfefdee05a"
                                        ".png")
         disconnected.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-        await ctx.channel.send(embed=disconnected, delete_after=5)
+        await ctx.channel.send(embed=disconnected)
 
     @commands.command()
     async def volume(self, ctx, amount: int = None):
@@ -757,7 +757,7 @@ class Music(commands.Cog):
             no_plist = discord.Embed(title="No Playlists",
                                      description=f"{ctx.author.mention}, you have not made any playlists yet.",
                                      color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=no_plist, delete_after=5)
+            return await ctx.channel.send(embed=no_plist)
 
         details = await self.get_playlist(ctx, None)
 
@@ -790,7 +790,7 @@ class Music(commands.Cog):
             no_name = discord.Embed(title="No Playlist Specified",
                                     description=f"{ctx.author.mention}, please specify a valid playlist name. Do `{await gcmds.prefix(ctx)}playlist` to get a list of your currently saved playlists",
                                     color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=no_name, delete_after=10)
+            return await ctx.channel.send(embed=no_name)
 
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if not player:
@@ -800,27 +800,27 @@ class Music(commands.Cog):
             invalid = discord.Embed(title="Error",
                                     description=f"{ctx.author.mention}, I am not currently in a voice channel",
                                     color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=invalid, delete_after=5)
+            return await ctx.channel.send(embed=invalid)
 
         if not ctx.author.voice or (player.is_connected and ctx.author.voice.channel.id != int(player.channel_id)):
             invalid = discord.Embed(title="Error",
                                     description=f"{ctx.author.mention}, you can only execute this command when you "
                                                 f"are connected to the same voice channel as I am",
                                     color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=invalid, delete_after=10)
+            return await ctx.channel.send(embed=invalid)
 
         if not await self.get_playlist(ctx, None):
             no_plist = discord.Embed(title="No Playlists",
                                      description=f"{ctx.author.mention}, you have not made any playlists yet.",
                                      color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=no_plist, delete_after=5)
+            return await ctx.channel.send(embed=no_plist)
 
         details = await self.get_playlist(ctx, playlist_name)
         if not details:
             no_plist = discord.Embed(title="Invalid Playlist",
                                      description=f"{ctx.author.mention}, you don't have any playlists named **{playlist_name}**",
                                      color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=no_plist, delete_after=10)
+            return await ctx.channel.send(embed=no_plist)
 
         for url in details[0][1]:
             results = await player.node.get_tracks(url)
@@ -832,7 +832,7 @@ class Music(commands.Cog):
         loaded = discord.Embed(title="Playlist Loaded",
                                description=f"{ctx.author.mention}, I have loaded all tracks to queue from **{playlist_name}**",
                                color=discord.Color.blue())
-        await ctx.channel.send(embed=loaded, delete_after=10)
+        await ctx.channel.send(embed=loaded)
 
     @playlist.command(aliases=['edit'])
     async def save(self, ctx):
@@ -846,7 +846,7 @@ class Music(commands.Cog):
             no_queue = discord.Embed(title="No Queue Available for Saving",
                                      description=f"{ctx.author.mention}, I cannot save an empty queue as a playlist",
                                      color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=no_queue, delete_after=5)
+            return await ctx.channel.send(embed=no_queue)
 
         urls = [f"https://www.youtube.com/watch?v={item['identifier']}" for item in queue]
 
@@ -881,14 +881,14 @@ class Music(commands.Cog):
                 try:
                     panel_message = await ctx.channel.fetch_message(panel.id)
                 except discord.NotFound:
-                    return await ctx.channel.send(embed=no_panel, delete_after=5)
+                    return await ctx.channel.send(embed=no_panel)
                 choice = await self.bot.wait_for("reaction_add", check=reaction_check,
                                                  timeout=30)
             except asyncio.TimeoutError:
                 timeout = discord.Embed(title="Save Request Timed Out",
                                         description=f"{ctx.author.mention}, your save request timed out. Please try again",
                                         color=discord.Color.blue())
-                return await panel.edit(embed=timeout, delete_after=10)
+                return await panel.edit(embed=timeout)
             else:
                 if str(choice[0].emoji) == plist_reactions[0]:
                     await panel.clear_reactions()
@@ -910,7 +910,7 @@ class Music(commands.Cog):
                                         color=discord.Color.blue())
                 await panel.edit(embed=getName)
             except discord.NotFound:
-                await ctx.channel.send(embed=no_panel, delete_after=5)
+                await ctx.channel.send(embed=no_panel)
             while True:
                 try:
                     reply = await self.bot.wait_for("message", check=from_user, timeout=30)
@@ -919,7 +919,7 @@ class Music(commands.Cog):
                                             description=f"{ctx.author.mention}, you did not specify a name within the "
                                                         f"time limit",
                                             color=discord.Color.blue())
-                    return await panel.edit(embed=timeout, delete_after=10)
+                    return await panel.edit(embed=timeout)
                 else:
                     break
             await gcmds.smart_delete(reply)
@@ -932,7 +932,7 @@ class Music(commands.Cog):
                 await panel.edit(embed=saveEmbed)
                 await self.save_playlist(ctx, plist_name, urls)
             except discord.NotFound:
-                return await ctx.channel.send(embed=no_panel, delete_after=30)
+                return await ctx.channel.send(embed=no_panel)
         else:
             edit_desc = "💽**Playlists:**\n\n"
             for counter, item in enumerate(details, 1):
@@ -948,7 +948,7 @@ class Music(commands.Cog):
                                         color=discord.Color.blue())
                 await panel.edit(embed=getName)
             except discord.NotFound:
-                return await ctx.channel.send(embed=no_panel, delete_after=5)
+                return await ctx.channel.send(embed=no_panel)
             while True:
                 try:
                     reply = await self.bot.wait_for("message", check=from_user, timeout=30)
@@ -957,7 +957,7 @@ class Music(commands.Cog):
                                             description=f"{ctx.author.mention}, you did not specify a name within the "
                                                         f"time limit",
                                             color=discord.Color.blue())
-                    return await panel.edit(embed=timeout, delete_after=10)
+                    return await panel.edit(embed=timeout)
                 else:
                     info = await self.check_playlist(ctx, reply.content, get_name=True)
                     if not info:
@@ -972,7 +972,7 @@ class Music(commands.Cog):
                                         color=discord.Color.blue())
                 await panel.edit(embed=getName)
             except discord.NotFound:
-                await ctx.channel.send(embed=no_panel, delete_after=5)
+                await ctx.channel.send(embed=no_panel)
             while True:
                 try:
                     name_reply = await self.bot.wait_for("message", check=from_user, timeout=30)
@@ -981,7 +981,7 @@ class Music(commands.Cog):
                                             description=f"{ctx.author.mention}, you did not specify a name within the "
                                                         f"time limit",
                                             color=discord.Color.blue())
-                    return await panel.edit(embed=timeout, delete_after=10)
+                    return await panel.edit(embed=timeout)
                 else:
                     break
             await gcmds.smart_delete(name_reply)
@@ -1005,9 +1005,9 @@ class Music(commands.Cog):
                                                      f"**ID:** {info[0][2]}",
                                          color=discord.Color.blue())
             try:
-                await panel.edit(embed=edited_plist, delete_after=20)
+                await panel.edit(embed=edited_plist)
             except discord.NotFound:
-                await ctx.channel.send(embed=edited_plist, delete_after=20)
+                await ctx.channel.send(embed=edited_plist)
 
     @playlist.command()
     async def add(self, ctx):
@@ -1050,15 +1050,15 @@ class Music(commands.Cog):
                 message = await self.bot.wait_for("message", check=from_user, timeout=30)
             except asyncio.TimeoutError:
                 try:
-                    return await panel.edit(embed=timeout, delete_after=10)
+                    return await panel.edit(embed=timeout)
                 except discord.NotFound:
-                    return await ctx.channel.send(embed=timeout, delete_after=10)
+                    return await ctx.channel.send(embed=timeout)
             else:
                 if message.content == "cancel":
                     try:
-                        return await panel.edit(embed=cancelled, delete_after=10)
+                        return await panel.edit(embed=cancelled)
                     except discord.NotFound:
-                        return await ctx.channel.send(embed=cancelled, delete_after=10)
+                        return await ctx.channel.send(embed=cancelled)
                 elif not await self.check_playlist(ctx, message.content):
                     continue
                 else:
@@ -1071,24 +1071,24 @@ class Music(commands.Cog):
                                       f"link that you would like to have added to {name} "
             await panel.edit(embed=panel_embed)
         except discord.NotFound:
-            return await ctx.channel.send(embed=cancelled, delete_after=10)
+            return await ctx.channel.send(embed=cancelled)
 
         try:
             message_link = await self.bot.wait_for("message", check=from_user, timeout=30)
         except asyncio.TimeoutError:
             try:
-                return await panel.edit(embed=timeout, delete_after=10)
+                return await panel.edit(embed=timeout)
             except discord.NotFound:
-                return await ctx.channel.send(embed=timeout, delete_after=10)
+                return await ctx.channel.send(embed=timeout)
         else:
             yt_link = message_link.content
             await gcmds.smart_delete(message_link)
 
         if not url_rx.match(yt_link) or "youtube.com" not in yt_link:
             try:
-                return await panel.edit(embed=invalid, delete_after=10)
+                return await panel.edit(embed=invalid)
             except discord.NotFound:
-                return await ctx.channel.send(embed=invalid, delete_after=10)
+                return await ctx.channel.send(embed=invalid)
         else:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
             if not player:
@@ -1112,9 +1112,9 @@ class Music(commands.Cog):
                 panel_embed.description = f"Added the following track to {name}:\n**1:** [{title}]({url})"
 
             try:
-                await panel.edit(embed=panel_embed, delete_after=10)
+                await panel.edit(embed=panel_embed)
             except discord.NotFound:
-                await ctx.channel.send(embed=panel_embed, delete_after=10)
+                await ctx.channel.send(embed=panel_embed)
 
     @playlist.command(aliases=['delete'])
     async def remove(self, ctx):
@@ -1138,7 +1138,7 @@ class Music(commands.Cog):
             no_plist = discord.Embed(title="No Playlists",
                                      description=f"{ctx.author.mention}, you have not made any playlists yet.",
                                      color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=no_plist, delete_after=5)
+            return await ctx.channel.send(embed=no_plist)
 
         user_playlists = f"{ctx.author.mention}, type the name of the playlist you want to delete *(type \"cancel\" " \
                          f"to cancel)*:\n\n "
@@ -1163,20 +1163,20 @@ class Music(commands.Cog):
                 try:
                     panel_message = await ctx.channel.fetch_message(panel.id)
                 except discord.NotFound:
-                    return await ctx.channel.send(embed=no_panel, delete_after=5)
+                    return await ctx.channel.send(embed=no_panel)
                 choice = await self.bot.wait_for("message", check=from_user, timeout=30)
             except asyncio.TimeoutError:
                 timeout = discord.Embed(title="Remove Request Timed Out",
                                         description=f"{ctx.author.mention}, you did not specify a name within the "
                                                     f"time limit",
                                         color=discord.Color.blue())
-                return await panel.edit(embed=timeout, delete_after=10)
+                return await panel.edit(embed=timeout)
             else:
                 if choice.content.lower() == "cancel":
                     cancelled = discord.Embed(title="Remove Request Cancelled",
                                               description=f"{ctx.author.mention}, you cancelled the remove request",
                                               color=discord.Color.blue())
-                    return await panel.edit(embed=cancelled, delete_after=10)
+                    return await panel.edit(embed=cancelled)
                 valid = False
                 for name, urls, playlist_id in details:
                     if choice.content == name:
@@ -1198,14 +1198,14 @@ class Music(commands.Cog):
                     for reaction in plist_delete_reactions:
                         await panel.add_reaction(reaction)
                 except discord.NotFound:
-                    return await ctx.channel.send(embed=no_panel, delete_after=5)
+                    return await ctx.channel.send(embed=no_panel)
                 reacted = await self.bot.wait_for("reaction_add", check=reaction_check,
                                                   timeout=30)
             except asyncio.TimeoutError:
                 timeout = discord.Embed(title="Remove Request Timed Out",
                                         description=f"{ctx.author.mention}, you did not react within the time limit",
                                         color=discord.Color.blue())
-                return await panel.edit(embed=timeout, delete_after=10)
+                return await panel.edit(embed=timeout)
             else:
                 if str(reacted[0].emoji) == plist_delete_reactions[0]:
                     await panel.clear_reactions()
@@ -1228,9 +1228,9 @@ class Music(commands.Cog):
             except discord.NotFound:
                 return await ctx.channel.send(embed=edited)
         try:
-            await panel.edit(embed=no_panel, delete_after=30)
+            await panel.edit(embed=no_panel)
         except discord.NotFound:
-            await ctx.channel.send(embed=no_panel, delete_after=30)
+            await ctx.channel.send(embed=no_panel)
 
 
 def setup(client):
