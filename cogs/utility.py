@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 from utils import globalcommands, paginator
 
 gcmds = globalcommands.GlobalCMDS()
-invite_url = "https://discord.com/oauth2/authorize?client_id=751966223813705809&scope=bot&permissions=66334016"
+invite_url = "https://discord.com/oauth2/authorize?client_id=763094082046132276&scope=bot&permissions=66061568"
 
 
 class Utility(commands.Cog):
