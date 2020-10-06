@@ -1,21 +1,29 @@
+import asyncio
 import json
 import logging
 import math
 import os
 import random
+import re
 import socket
 import sys
-import re
-import discord
-import asyncpg
-import asyncio
 from datetime import datetime
+
+import asyncpg
+import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+from lavalink.exceptions import NodeException
+
 from utils import customerrors, globalcommands
 
-
 gcmds = globalcommands.GlobalCMDS()
+ALL_CUSTOMERRORS = [
+    customerrors.PremiumError,
+    customerrors.MBConnectedError,
+    customerrors.NoBoundChannel,
+    customerrors.NotBoundChannel,
+]
 version = f"Running MarwynnBot Music {gcmds.version}"
 
 if os.path.exists('discord.log'):
@@ -33,13 +41,13 @@ async def get_prefix(self: commands.AutoShardedBot, message):
         extras = ('mbm ', 'mBm ', 'mbM', 'mBM', 'Mbm ', 'MBm ', 'MbM', 'MBM', 'm?')
     else:
         async with self.db.acquire() as con:
-            prefix = await con.fetchval(f"SELECT custom_prefix from guild_mb WHERE guild_id = {message.guild.id}")
+            prefix = await con.fetchval(f"SELECT custom_prefix from guild WHERE guild_id = {message.guild.id}")
         extras = (
             f'{prefix}', 'mbm ', 'mBm ', 'mbM', 'mBM', 'Mbm ', 'MBm ', 'MbM', 'MBM', 'm?')
     return commands.when_mentioned_or(*extras)(self, message)
 
 
-async def run():
+async def run(uptime):
     credentials = {
         "user": os.getenv("PG_USER"),
         "password": os.getenv("PG_PASSWORD"),
@@ -52,8 +60,10 @@ async def run():
 
     description = "A music bot for Discord base on MarwynnBot"
     startup = discord.Activity(name="Starting Up...", type=discord.ActivityType.playing)
+    intents = discord.Intents.all()
     bot = Bot(command_prefix=get_prefix, help_command=None, shard_count=1, description=description, db=db,
-              fetch_offline_members=True, status=discord.Status.online, activity=startup)
+              fetch_offline_members=True, status=discord.Status.online, activity=startup, uptime=uptime, intents=intents)
+
     try:
         await bot.start(gcmds.env_check("TOKEN"))
     except KeyboardInterrupt:
@@ -71,12 +81,13 @@ class Bot(commands.AutoShardedBot):
             description=kwargs["description"],
             fetch_offline_members=kwargs['fetch_offline_members'],
             status=kwargs['status'],
-            activity=kwargs['activity']
+            activity=kwargs['activity'],
+            intents=kwargs['intents']
         )
-        self.uptime = int(datetime.now().timestamp())
+        self.uptime = kwargs['uptime']
         self.db = kwargs.pop("db")
         globalcommands.db = self.db
-        gcmds = globalcommands.GlobalCMDS(self)
+        gcmds = globalcommands.GlobalCMDS(bot=self)
         func_checks = (self.check_blacklist, self.disable_dm_exec)
         func_listen = (self.on_message, self.on_command_error, self.on_guild_join)
         for func in func_checks:
@@ -146,19 +157,13 @@ class Bot(commands.AutoShardedBot):
                                     description=f"{ctx.author.mention}, `[{error.param.name}]` is a required argument",
                                     color=discord.Color.dark_red())
             return await ctx.channel.send(embed=req_arg)
-        elif isinstance(error, discord.Forbidden):
-            forbidden = discord.Embed(title="403 Forbidden",
-                                      description=f"{ctx.author.mention}, I cannot execute this command because I lack "
-                                      f"the permissions to do so, or my role is lower in the hierarchy.",
-                                      color=discord.Color.dark_red())
-            return await ctx.channel.send(embed=forbidden)
-        elif isinstance(error, discord.ext.commands.MissingPermissions):
+        elif isinstance(error, commands.MissingPermissions):
             missing = discord.Embed(title="Insufficient User Permissions",
                                     description=f"{ctx.author.mention}, to execute this command, you need "
                                                 f"`{'` `'.join(error.missing_perms).replace('_', ' ').title()}`",
                                     color=discord.Color.dark_red())
             return await ctx.channel.send(embed=missing)
-        elif isinstance(error, discord.ext.commands.BotMissingPermissions):
+        elif isinstance(error, commands.BotMissingPermissions):
             missing = discord.Embed(title="Insufficient Bot Permissions",
                                     description=f"{ctx.author.mention}, to execute this command, I need "
                                                 f"`{'` `'.join(error.missing_perms).replace('_', ' ').title()}`",
@@ -186,15 +191,36 @@ class Bot(commands.AutoShardedBot):
             cooldown = discord.Embed(title="Command on Cooldown",
                                      description=f"{ctx.author.mention}, this command is still on cooldown for {cooldown_time_truncated} {spell}",
                                      color=discord.Color.dark_red())
-            await ctx.channel.send(embed=cooldown)
-        elif isinstance(error, customerrors.PremiumError):
-            return await ctx.channel.send(embed=error.embed)
-        elif isinstance(error, customerrors.MBConnectedError):
-            return await ctx.channel.send(embed=error.embed)
-        elif isinstance(error, commands.CheckFailure):
-            pass
+            return await ctx.channel.send(embed=cooldown)
+        elif hasattr(error, "original"):
+            if isinstance(error.original, NodeException):
+                embed = discord.Embed(title="Music Error",
+                                      description="NodeException: " + str(error.original),
+                                      color=discord.Color.dark_red())
+                return await ctx.channel.send(embed=embed)
+            elif isinstance(error.original, discord.Forbidden):
+                forbidden = discord.Embed(title="403 Forbidden",
+                                          description=f"{ctx.author.mention}, I cannot execute this command because I lack "
+                                          f"the permissions to do so, or my role is lower in the hierarchy.",
+                                          color=discord.Color.dark_red())
+                return await ctx.channel.send(embed=forbidden)
+            else:
+                raise error
         else:
-            raise error
+            for error_type in ALL_CUSTOMERRORS:
+                if isinstance(error, error_type):
+                    if hasattr(error, "embed"):
+                        return await ctx.channel.send(embed=error.embed)
+                    else:
+                        pass
+                    break
+                else:
+                    continue
+            else:
+                if isinstance(error, commands.CheckFailure):
+                    pass
+                else:
+                    raise error
 
     async def on_guild_join(self, guild):
         async with self.db.acquire() as con:
@@ -227,5 +253,6 @@ class Bot(commands.AutoShardedBot):
         return at
 
 
+uptime = int(datetime.now().timestamp())
 loop = asyncio.get_event_loop()
-loop.run_until_complete(run())
+loop.run_until_complete(run(uptime))
