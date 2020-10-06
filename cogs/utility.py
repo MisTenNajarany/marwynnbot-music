@@ -47,7 +47,7 @@ class Utility(commands.Cog):
                       desc="Sets the server's custom prefix",
                       usage="setprefix [prefix]",
                       uperms=["Manage Server"],
-                      note="If `[prefix]` is \"reset\", then the custom prefix will be set to \"m!\"")
+                      note="If `[prefix]` is \"reset\", then the custom prefix will be set to \"m?\"")
     @commands.has_permissions(manage_guild=True)
     async def setPrefix(self, ctx, prefix):
         async with self.db.acquire() as con:
@@ -59,9 +59,9 @@ class Utility(commands.Cog):
                                                         f"and `mbm ` as prefixes",
                                             color=discord.Color.blue())
             else:
-                await con.execute(f"UPDATE guild_mb SET custom_prefix='m!' WHERE guild_id={ctx.guild.id}")
+                await con.execute(f"UPDATE guild_mb SET custom_prefix='m?' WHERE guild_id={ctx.guild.id}")
                 prefixEmbed = discord.Embed(title='Server Prefix Set',
-                                            description=f"Server prefix has been reset to `m!`",
+                                            description=f"Server prefix has been reset to `m?`",
                                             color=discord.Color.blue())
             await ctx.channel.send(embed=prefixEmbed)
 
