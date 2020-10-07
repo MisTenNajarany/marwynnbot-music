@@ -17,6 +17,13 @@ from lavalink.exceptions import NodeException
 
 from utils import customerrors, globalcommands
 
+try:
+    import uvloop
+except ImportError:
+    pass
+else:
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
 gcmds = globalcommands.GlobalCMDS()
 ALL_CUSTOMERRORS = [
     customerrors.PremiumError,
