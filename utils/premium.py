@@ -6,7 +6,7 @@ from utils import customerrors, globalcommands
 def is_premium(*args, **kwargs):
 
     async def predicate(ctx, *args, **kwargs):
-        db = globalcommands.db
+        db = globalcommands._db
         if not db:
             raise customerrors.NoPostgreSQL()
         async with db.acquire() as con:
@@ -28,7 +28,7 @@ def is_premium(*args, **kwargs):
 
 
 async def check_premium(user: discord.User) -> bool:
-    db = globalcommands.db
+    db = globalcommands._db
     if not db:
         raise customerrors.NoPostgreSQL()
     async with db.acquire() as con:
