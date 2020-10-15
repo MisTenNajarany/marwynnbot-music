@@ -5,7 +5,9 @@
 
 # MarwynnBot Music <img align="right" src="/vibingtoad.jpg" height="200" width="200" style="border-radius: 50%"> ![Version](https://img.shields.io/badge/Version-v1.0.0-brightgreen)
 
-I am a port of [MarwynnBot's](https://github.com/marwynnsomridhivej/marwynnbot) music functionality.
+If you want a [MarwynnBot-like](https://github.com/marwynnsomridhivej/marwynnbot) experience, but just for music, I am just the thing you are looking for.
+
+MarwynnBot Music provides versatile music bot functionality. For servers that have MarwynnBot already added, MarwynnBot Music will allow you to have two high quality music bots at your disposal.
 
 ## Add Me To Your Server
 
@@ -14,22 +16,16 @@ You can add the public MarwynnBot Music to your own Discord server by clicking [
 ## Prefix
 
 * The default prefix is `m?`
-* Global prefixes are mentioning the bot or `mm` *(case insensitive)*
+* Global prefixes are mentioning the bot or `mbm` *(case insensitive)*
 
 ## Commands
 
 Add the bot and do `m?help` for a list of all supported commands.
 
-Commands are separated into categories that determine a command's function. I am currently working on making a website
-that will display all of MarwynnBot Music's commands. Please stay tuned for its release
-
-For a guide on all commands and their usages, I will be updating [MarwynnBot's Website](http://www.marwynnbot.tk)
-
 ## Self Hosting
 
 I would prefer that you do not create an instance of my bot for self hosting purposes. I have made this repository
-public so that anyone who needs an example of a bot written in discord.py can freely look at how I have made it. I do
-realise that my python is garbage, and I am working on improving as this project is developed.
+public so that anyone who needs an example of a bot written in discord.py can freely look at how I have made it. I will not be supporting those who still choose to self host this bot under any circumstances, and you will not be receiving help. To avoid the hassle, just use the public bot.
 
 ## Contact Info
 
@@ -37,4 +33,4 @@ realise that my python is garbage, and I am working on improving as this project
 
 **Discord:** MS Arranges#3060
 
-**Discord Server:** https://discord.gg/fYBTdUp
+**Support Server:** https://discord.gg/78XXt3Q
