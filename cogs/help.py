@@ -87,6 +87,29 @@ class Help(commands.Cog):
                                 inline=False if len(cog_commands) > 3 else True)
         return await ctx.channel.send(embed=embed)
 
+    @commands.command(desc="Fetches the invite link to MarwynnBot Music's Support Server",
+                      usage="support")
+    async def support(self, ctx):
+        embed = discord.Embed(title="Support Server",
+                              description=f"Join my support server using this link:\n> https://discord.gg/78XXt3Q\n"
+                              "Thank you for using MarwynnBot Music!",
+                              color=discord.Color.blue())
+        embed.set_thumbnail(url=self.bot.user.avatar_url)
+        return await ctx.channel.send(content="https://discord.gg/78XXt3Q", embed=embed)
+
+    @commands.command(desc="Gives the user a link to MarwynnBot Music's privacy policy",
+                      usage="privacy")
+    async def privacy(self, ctx):
+        embed = discord.Embed(title="Privacy Policy",
+                              description=f"{ctx.author.mention}, click "
+                              "[here](https://github.com/marwynnsomridhivej/marwynnbot/blob/master/PRIVACY.md) "
+                              "to access my privacy policy. Please join the MarwynnBot Support Server "
+                              "if you have any questions regarding the privacy policy by doing "
+                              f"`{await gcmds.prefix(ctx)}support`",
+                              color=discord.Color.blue())
+        embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
+        return await ctx.channel.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Help(bot))
