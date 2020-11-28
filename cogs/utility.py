@@ -1,11 +1,8 @@
-import os
-import json
 from datetime import datetime, timedelta
-from io import BytesIO
 
 import discord
-from discord.ext import commands, tasks
-from utils import globalcommands, paginator
+from discord.ext import commands
+from utils import GlobalCMDS
 
 gcmds = GlobalCMDS()
 invite_url = "https://discord.com/oauth2/authorize?client_id=751966223813705809&scope=bot&permissions=66334016"
