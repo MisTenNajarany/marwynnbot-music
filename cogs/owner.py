@@ -1,14 +1,12 @@
 import os
 import subprocess
-import sys
 from datetime import datetime
-from io import BytesIO, StringIO
+from io import BytesIO
 
 import discord
-from asyncpg.exceptions import UniqueViolationError
 from discord.ext import commands
 from discord.ext.commands.errors import CommandInvokeError
-from utils import customerrors, globalcommands, paginator
+from utils import GlobalCMDS
 
 gcmds = GlobalCMDS()
 OWNER_PERM = ["Bot Owner Only"]
