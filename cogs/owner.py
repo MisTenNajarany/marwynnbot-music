@@ -10,7 +10,7 @@ from discord.ext import commands
 from discord.ext.commands.errors import CommandInvokeError
 from utils import customerrors, globalcommands, paginator
 
-gcmds = globalcommands.GlobalCMDS()
+gcmds = GlobalCMDS()
 OWNER_PERM = ["Bot Owner Only"]
 
 
@@ -19,7 +19,7 @@ class Owner(commands.Cog):
     def __init__(self, bot):
         global gcmds
         self.bot = bot
-        gcmds = globalcommands.GlobalCMDS(self.bot)
+        gcmds = GlobalCMDS(self.bot)
 
     @commands.group(invoke_without_command=True,
                     aliases=['g'],

@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands, tasks
 from utils import globalcommands, paginator
 
-gcmds = globalcommands.GlobalCMDS()
+gcmds = GlobalCMDS()
 invite_url = "https://discord.com/oauth2/authorize?client_id=751966223813705809&scope=bot&permissions=66334016"
 
 
@@ -16,7 +16,7 @@ class Utility(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         global gcmds
         self.bot = bot
-        gcmds = globalcommands.GlobalCMDS(bot=self.bot)
+        gcmds = GlobalCMDS(bot=self.bot)
 
     @commands.command(desc="Displays MarwynnBot Music's invite link",
                       usage="invite")

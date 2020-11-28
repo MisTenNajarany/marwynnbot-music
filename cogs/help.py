@@ -1,12 +1,11 @@
-import random
 from collections import namedtuple
 from datetime import datetime
 
 import discord
 from discord.ext import commands
-from utils import customerrors, globalcommands
+from utils import GlobalCMDS, customerrors
 
-gcmds = globalcommands.GlobalCMDS()
+gcmds = GlobalCMDS()
 DEFAULT_THUMBNAIL = "https://www.jing.fm/clipimg/full/71-716621_transparent-clip-art-open-book-frame-line-art.png"
 SUPPORT_SERVER_INVITE = "https://discord.gg/78XXt3Q"
 CogCommands = namedtuple("CogCommands", ['cog_name', 'cog'])
@@ -18,7 +17,7 @@ class Help(commands.Cog):
         global gcmds
         self.bot = bot
         self.bot.loop.create_task(self.init_cogs_list())
-        gcmds = globalcommands.GlobalCMDS(self.bot)
+        gcmds = GlobalCMDS(self.bot)
 
     async def init_cogs_list(self):
         await self.bot.wait_until_ready()
