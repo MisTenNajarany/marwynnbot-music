@@ -1,13 +1,10 @@
 import asyncio
-import json
 import logging
-import math
 import os
 import random
-import re
 import socket
-import sys
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 
 import asyncpg
 import discord
@@ -15,7 +12,7 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from lavalink.exceptions import NodeException
 
-from utils import customerrors, globalcommands
+from utils import GlobalCMDS, customerrors
 
 try:
     import uvloop
@@ -23,8 +20,10 @@ except ImportError:
     pass
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+finally:
+    load_dotenv()
 
-gcmds = globalcommands.GlobalCMDS()
+gcmds = GlobalCMDS()
 ALL_CUSTOMERRORS = [
     customerrors.PremiumError,
     customerrors.MBConnectedError,
@@ -37,8 +36,9 @@ if os.path.exists('discord.log'):
     os.remove('discord.log')
 
 logger = logging.getLogger('discord')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+logger.setLevel(logging.INFO)
+handler = RotatingFileHandler("discord.log", mode="a", maxBytes=25000000,
+                              backupCount=2, encoding="utf-8", delay=0)
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
@@ -93,7 +93,7 @@ class Bot(commands.AutoShardedBot):
         )
         self.uptime = kwargs['uptime']
         self.db = kwargs.pop("db")
-        gcmds = globalcommands.GlobalCMDS(bot=self)
+        gcmds = GlobalCMDS(bot=self)
         func_checks = (self.check_blacklist, self.disable_dm_exec)
         func_listen = (self.on_message, self.on_command_error, self.on_guild_join)
         for func in func_checks:
