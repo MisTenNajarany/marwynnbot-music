@@ -109,7 +109,6 @@ class Bot(commands.AutoShardedBot):
     @tasks.loop(seconds=120)
     async def status(self):
         await self.wait_until_ready()
-        at = await self.get_aliases()
         activity1 = discord.Activity(name="m?h for help!", type=discord.ActivityType.listening)
         activity2 = discord.Activity(name="Invite MarwynnBot!", type=discord.ActivityType.playing)
         activity3 = discord.Activity(name=f"MarwynnBot Music {gcmds.version}", type=discord.ActivityType.playing)
@@ -239,7 +238,7 @@ class Bot(commands.AutoShardedBot):
 
     async def all_loaded(self):
         await self.wait_until_ready()
-        globalcommands.start_time = int(datetime.now().timestamp())
+        self.uptime
         hostname = socket.gethostname()
         ip = socket.gethostbyname(hostname)
         users = len(self.users)
